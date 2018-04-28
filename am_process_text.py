@@ -63,6 +63,13 @@ class DataGen:
         self.geez_chars = char2tup
         self.char2tup = char2tup
 
+        class_output_size = 36
+        char_output_size = 7
+        self.data_dims = (
+            (None, self.seuqnce_length, 1),
+            (None, class_output_size),
+            (None, char_output_size))
+
     def read_dataset(self):
         self.raw_datatset = open(
             self.dataset_filename, encoding="utf-8").read()
@@ -82,6 +89,10 @@ class DataGen:
         int_encoded = [self.char2int[c] for c in self.raw_datatset]
         class_output_size = 36
         char_output_size = 7
+        self.data_dims = (
+            (None, seuqnce_length, 1),
+            (None, class_output_size),
+            (None, char_output_size))
         N_DATA = len(self.raw_datatset) - seuqnce_length - 1
         data = np.empty((N_DATA, seuqnce_length, 1), dtype=np.float32)
         self.train_Y_classes = np.empty(
@@ -108,13 +119,11 @@ class DataGen:
                           )
 
     def gen_input_from_file(self):
-        
         if self.current_read_chars >= self.total_num_chars:
             self.current_read_chars = 0
             self.data_file.seek(0, 0)
             self.raw_datatset = ''
         data = self.data_file.read(self.seuqnce_length * self.batch_size)
-        print(self.data_file.tell())
         total_read = len(data)
         batch_size = total_read // self.seuqnce_length
         total_to_read = batch_size * self.seuqnce_length
@@ -129,7 +138,6 @@ class DataGen:
         else:
             back_index = len(self.raw_datatset) - self.seuqnce_length
             self.raw_datatset = self.raw_datatset[back_index:] + data
-        print(self.raw_datatset)
         self.prepare_training_data()
         self.current_read_chars + len(data)
         return self.train_X, self.train_Y_classes, self.train_Y_chars
