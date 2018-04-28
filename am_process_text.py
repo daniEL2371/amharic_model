@@ -1,5 +1,6 @@
 import numpy as np
 from util import *
+import os
 
 
 class DataGen:
@@ -7,7 +8,7 @@ class DataGen:
     def __init__(self, dataset_file, geez_file, batch_size, seuqnce_length):
         self.dataset_filename = dataset_file
         self.geez_chars_filename = geez_file
-        self.raw_datatset = None
+        self.raw_datatset = ""
         self.geez_chars = None
         self.vocab = None
         self.char2int = {}
@@ -21,6 +22,9 @@ class DataGen:
         self.batch_size = batch_size
         self.seuqnce_length = seuqnce_length
         self.data_dims = None
+        self.data_file = open(dataset_file, mode='r', encoding='utf-8')
+        self.total_num_chars = 14908472
+        self.current_read_chars = 0
 
     def geez_to_dict(self):
         data = open(self.geez_chars_filename, encoding='utf-8').readlines()
@@ -88,7 +92,7 @@ class DataGen:
             text = int_encoded[i:i + seuqnce_length]
             data[i] = np.array(text).reshape((seuqnce_length, 1))
             char_int = self.int2char[int_encoded[i + seuqnce_length]]
-   
+
             class_val = self.char2tup[char_int][0] // 10
             self.train_Y_classes[i] = one_hot_encode(
                 class_val, self.train_Y_classes.shape[1])
@@ -102,6 +106,33 @@ class DataGen:
                           self.train_Y_classes.shape,
                           self.train_Y_chars.shape
                           )
+
+    def gen_input_from_file(self):
+        
+        if self.current_read_chars >= self.total_num_chars:
+            self.current_read_chars = 0
+            self.data_file.seek(0, 0)
+            self.raw_datatset = ''
+        data = self.data_file.read(self.seuqnce_length * self.batch_size)
+        print(self.data_file.tell())
+        total_read = len(data)
+        batch_size = total_read // self.seuqnce_length
+        total_to_read = batch_size * self.seuqnce_length
+        data = data[0:total_read]
+        if len(data) < self.seuqnce_length:
+            self.current_read_chars
+            self.data_file.seek(0, 0)
+            data = self.data_file.read(self.seuqnce_length * self.batch_size)
+            self.raw_datatset = ''
+        if len(self.raw_datatset) < self.seuqnce_length:
+            self.raw_datatset = data
+        else:
+            back_index = len(self.raw_datatset) - self.seuqnce_length
+            self.raw_datatset = self.raw_datatset[back_index:] + data
+        print(self.raw_datatset)
+        self.prepare_training_data()
+        self.current_read_chars + len(data)
+        return self.train_X, self.train_Y_classes, self.train_Y_chars
 
     def gen_input(self):
         for x, y, z in zip(self.train_X, self.train_Y_classes, self.train_Y_chars):
@@ -127,16 +158,18 @@ class DataGen:
 
     def process(self):
         self.geez_to_dict()
-        self.read_dataset()
+        # self.read_dataset()
         # self.chars_to_dict()
-        self.prepare_training_data()
-        self.iterator = self.gen_input()
+        # self.prepare_training_data()
+        # self.iterator = self.gen_input()
 
 
-# gen = DataGen("data/small.txt", "data/geez.txt", 120, 100)
+# gen = DataGen("data/small.txt", "data/geez.txt", 10, 100)
 # gen.process()
+
 # bx, by, bz = gen.get_batch()
 # print(by.shape, by.dtype)
 
 # for i in range(10000):
-#     batch = gen.get_batch()
+#     batch = gen.gen_input_from_file()
+    # print(batch[0].shape)
