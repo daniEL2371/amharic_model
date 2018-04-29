@@ -37,46 +37,53 @@ char_model.compile(loss="categorical_crossentropy", optimizer="adam")
 
 print("Starting Training")
 # class_model.fit(gen.train_X, gen.train_Y_classes, epochs=20, batch_size=200)
-for i in range(10):
+for i in range(100000):
     x, y, z = gen.gen_input_from_file()
     temp = class_model.train_on_batch(x, y)
-    print(temp)
+    if i % 1000 == 0:
+        print(temp)
 
 # # class_model_json = class_model.to_json()
 # # with open("class_model.json", "w") as json_file:
 # #     json_file.write(class_model_json)
 # # # serialize weights to HDF5
-# class_model.save_weights("models/class_model-5.h5")
+class_model.save_weights("models/class_model-t.h5")
+
+for i in range(100000):
+    x, y, z = gen.gen_input_from_file()
+    temp = char_model.train_on_batch(x, z)
+    if i % 1000 == 0:
+        print(temp)
 
 # char_model.fit(gen.train_X, gen.train_Y_chars, epochs=20, batch_size=200)
 # # char_model_json = class_model.to_json()
 # # with open("class_model.json", "w") as json_file:
 # #     json_file.write(char_model_json)
 # # # serialize weights to HDF5
-# char_model.save_weights("models/char_model-5.h5")
+char_model.save_weights("models/char_model-t.h5")
 
 
-# class_model.load_weights("models/class_model-5.h5")
-# char_model.load_weights("models/char_model-5.h5")
-# show_len = 100
-# start = 200
-# seed_text = gen.raw_datatset[start:start + seq_length]
-# gen_seq = []
-# print(seed_text)
-# seed_text = list(seed_text)
-# for sh in range(show_len):
+class_model.load_weights("models/class_model-5.h5")
+char_model.load_weights("models/char_model-5.h5")
+show_len = 100
+start = 200
+seed_text = gen.raw_datatset[start:start + seq_length]
+gen_seq = []
+print(seed_text)
+seed_text = list(seed_text)
+for sh in range(show_len):
 
-#     seed_int = [gen.char2int[s] for s in seed_text]
-#     seedvec = np.array(seed_int, dtype=np.float32).reshape(
-#         (1, seq_length, 1)) / 350
-#     cs = class_model.predict(seedvec)[0].argmax() * 10
-#     cr = char_model.predict(seedvec)[0].argmax()
-#     char_int = cs + cr
-#     if char_int not in gen.int2char:
-#         char_int = 350
-#     gen_seq.append(char_int)
-#     seed_text.append(gen.int2char[char_int])
-#     seed_text = seed_text[1:]
+    seed_int = [gen.char2int[s] for s in seed_text]
+    seedvec = np.array(seed_int, dtype=np.float32).reshape(
+        (1, seq_length, 1)) / 350
+    cs = class_model.predict(seedvec)[0].argmax() * 10
+    cr = char_model.predict(seedvec)[0].argmax()
+    char_int = cs + cr
+    if char_int not in gen.int2char:
+        char_int = 350
+    gen_seq.append(char_int)
+    seed_text.append(gen.int2char[char_int])
+    seed_text = seed_text[1:]
 
-# gen_seq = ''.join([gen.int2char[g] for g in gen_seq])
-# print(gen_seq)
+gen_seq = ''.join([gen.int2char[g] for g in gen_seq])
+print(gen_seq)
