@@ -1,89 +1,59 @@
 import numpy as np
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import LSTM
-from keras.layers import Input
-from keras.models import Model
-from keras.callbacks import ModelCheckpoint
-from keras.utils import np_utils
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 from am_process_text import DataGen
+from models import *
+from training_handler import *
 
 seq_length = 100
 batch_size = 10
 hidden_size = 128
 
 print("Generating Data")
-gen = DataGen("data/small.txt", "data/geez.txt", batch_size, seq_length)
+cwd = os.getcwd()
+gen = DataGen(os.path.join(cwd, "data/small.txt"), os.path.join(cwd, "data/geez.txt"), batch_size, seq_length)
+gen.stride = 1
 gen.process()
 x_dims, y_dims, z_dims = gen.data_dims
 
 input_shape = (x_dims[1], x_dims[2])
-class_model = Sequential()
-class_model.add(
-    LSTM(hidden_size, input_shape=input_shape, return_sequences=True))
-class_model.add(Dropout(.2))
-class_model.add(LSTM(hidden_size))
-class_model.add(Dense(y_dims[1], activation="softmax"))
-class_model.compile(loss="categorical_crossentropy", optimizer="adam")
 
-char_model = Sequential()
-char_model.add(LSTM(hidden_size, input_shape=(x_dims[1], x_dims[2])))
-# char_model.add(LSTM(64))
-char_model.add(Dense(z_dims[1], activation="softmax"))
-char_model.compile(loss="categorical_crossentropy", optimizer="adam")
+class_model = get_class_model(input_shape, y_dims[1])
+char_model = get_char_model(input_shape, z_dims[1])
 
-print("Starting Training")
-# class_model.fit(gen.train_X, gen.train_Y_classes, epochs=20, batch_size=200)
-for i in range(100000):
-    x, y, z = gen.gen_input_from_file()
-    temp = class_model.train_on_batch(x, y)
-    if i % 1000 == 0:
-        print(temp)
+th = TrainingHandler(gen, class_model, "class_model")
+th.train("test-small0", 100000, 100, save_model=True)
 
-# # class_model_json = class_model.to_json()
-# # with open("class_model.json", "w") as json_file:
-# #     json_file.write(class_model_json)
-# # # serialize weights to HDF5
-class_model.save_weights("models/class_model-t.h5")
+gen.reset()
+gen.model = "char"
+th = TrainingHandler(gen, char_model, "char_model")
+th.train("test-small0", 100000, 100, save_model=True)
 
-for i in range(100000):
-    x, y, z = gen.gen_input_from_file()
-    temp = char_model.train_on_batch(x, z)
-    if i % 1000 == 0:
-        print(temp)
+# class_model.load_weights("models/class_model-sm.h5")
+# char_model.load_weights("models/char_model-sm.h5")
+# show_len = 100
+# start = 200
+# gen.gen_input_from_file()
+# seed_text = gen.raw_datatset[start:start + seq_length]
+# gen_seq = []
+# print(gen.raw_datatset[start:start + seq_length])
+# print()
+# print(gen.raw_datatset[start + seq_length:start + seq_length * 2])
+# print()
+# seed_text = list(seed_text)
+# for sh in range(show_len):
 
-# char_model.fit(gen.train_X, gen.train_Y_chars, epochs=20, batch_size=200)
-# # char_model_json = class_model.to_json()
-# # with open("class_model.json", "w") as json_file:
-# #     json_file.write(char_model_json)
-# # # serialize weights to HDF5
-char_model.save_weights("models/char_model-t.h5")
+#     seed_int = [gen.char2int[s] for s in seed_text]
+#     seedvec = np.array(seed_int, dtype=np.float32).reshape(
+#         (1, seq_length, 1)) / 350
+#     cs = class_model.predict(seedvec)[0].argmax() * 10
+#     cr = char_model.predict(seedvec)[0].argmax()
+#     char_int = cs + cr
+#     if char_int not in gen.int2char:
+#         char_int = 350
+#     gen_seq.append(char_int)
+#     seed_text.append(gen.int2char[char_int])
+#     seed_text = seed_text[1:]
 
-
-class_model.load_weights("models/class_model-5.h5")
-char_model.load_weights("models/char_model-5.h5")
-show_len = 100
-start = 200
-seed_text = gen.raw_datatset[start:start + seq_length]
-gen_seq = []
-print(seed_text)
-seed_text = list(seed_text)
-for sh in range(show_len):
-
-    seed_int = [gen.char2int[s] for s in seed_text]
-    seedvec = np.array(seed_int, dtype=np.float32).reshape(
-        (1, seq_length, 1)) / 350
-    cs = class_model.predict(seedvec)[0].argmax() * 10
-    cr = char_model.predict(seedvec)[0].argmax()
-    char_int = cs + cr
-    if char_int not in gen.int2char:
-        char_int = 350
-    gen_seq.append(char_int)
-    seed_text.append(gen.int2char[char_int])
-    seed_text = seed_text[1:]
-
-gen_seq = ''.join([gen.int2char[g] for g in gen_seq])
-print(gen_seq)
+# gen_seq = ''.join([gen.int2char[g] for g in gen_seq])
+# print(gen_seq)

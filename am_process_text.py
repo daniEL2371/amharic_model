@@ -23,8 +23,10 @@ class DataGen:
         self.seuqnce_length = seuqnce_length
         self.data_dims = None
         self.data_file = open(dataset_file, mode='r', encoding='utf-8')
-        self.total_num_chars = 14908472
+        self.total_num_chars = 9860  # 14908472
         self.current_read_chars = 0
+        self.stride = 1
+        self.model = "class"
 
     def geez_to_dict(self):
         data = open(self.geez_chars_filename, encoding='utf-8').readlines()
@@ -44,17 +46,17 @@ class DataGen:
         for k in range(34):
             row = l[k]
             for i in range(len(row)):
-                char2int[row[i]] = k * 10 + i
+                char2int[row[i]] = (k * 10 + i)/350
                 int2char[k * 10 + i] = row[i]
                 char2tup[row[i]] = (k * 10, i)
 
         for k in range(34, 37):
             row = l[k]
             for i in range(len(row)):
-                char2int[row[i]] = 340
+                char2int[row[i]] = 340/350
                 int2char[340] = row[i]
                 char2tup[row[i]] = (34, 0)
-        char2int[' '] = 350
+        char2int[' '] = 350/350
         int2char[350] = ' '
         char2tup[' '] = (350, 0)
 
@@ -93,54 +95,61 @@ class DataGen:
             (None, seuqnce_length, 1),
             (None, class_output_size),
             (None, char_output_size))
-        N_DATA = len(self.raw_datatset) - seuqnce_length - 1
+        N_DATA = len(self.raw_datatset) // self.stride - seuqnce_length - 1
         data = np.empty((N_DATA, seuqnce_length, 1), dtype=np.float32)
         self.train_Y_classes = np.empty(
             (N_DATA, class_output_size), dtype=np.int32)
         self.train_Y_chars = np.empty(
             (N_DATA, char_output_size), dtype=np.int32)
         for i in range(N_DATA):
-            text = int_encoded[i:i + seuqnce_length]
+            text = int_encoded[i:i + seuqnce_length * self.stride: self.stride]
             data[i] = np.array(text).reshape((seuqnce_length, 1))
-            char_int = self.int2char[int_encoded[i + seuqnce_length]]
+            char_int = self.int2char[int_encoded[i +
+                                                 seuqnce_length * self.stride]]
+            if self.model != "class":
+                class_val = self.char2tup[char_int][0] // 10
+                self.train_Y_classes[i] = one_hot_encode(
+                    class_val, self.train_Y_classes.shape[1])
+            else:
+                char_val = self.char2tup[char_int][1]
+                self.train_Y_chars[i] = one_hot_encode(
+                    char_val, self.train_Y_chars.shape[1])
 
-            class_val = self.char2tup[char_int][0] // 10
-            self.train_Y_classes[i] = one_hot_encode(
-                class_val, self.train_Y_classes.shape[1])
-
-            char_val = self.char2tup[char_int][1]
-            self.train_Y_chars[i] = one_hot_encode(
-                char_val, self.train_Y_chars.shape[1])
-
-        self.train_X = data / 350
+        # self.train_X = data / 350
         self.data_dims = (self.train_X.shape,
                           self.train_Y_classes.shape,
                           self.train_Y_chars.shape
                           )
 
+    def reset(self):
+        self.current_read_chars = 0
+        self.data_file.seek(0, 0)
+        self.raw_datatset = ''
+
     def gen_input_from_file(self):
         if self.current_read_chars >= self.total_num_chars:
-            self.current_read_chars = 0
-            self.data_file.seek(0, 0)
-            self.raw_datatset = ''
-        data = self.data_file.read(self.seuqnce_length * self.batch_size)
+            self.reset()
+        seq_len = self.seuqnce_length * self.stride
+        data = self.data_file.read(seq_len * self.batch_size)
         total_read = len(data)
-        batch_size = total_read // self.seuqnce_length
-        total_to_read = batch_size * self.seuqnce_length
+        batch_size = total_read // seq_len
+        total_to_read = batch_size * seq_len
         data = data[0:total_read]
-        if len(data) < self.seuqnce_length:
-            self.current_read_chars
-            self.data_file.seek(0, 0)
-            data = self.data_file.read(self.seuqnce_length * self.batch_size)
-            self.raw_datatset = ''
-        if len(self.raw_datatset) < self.seuqnce_length:
+        if len(data) < seq_len:
+            self.reset()
+            data = self.data_file.read(seq_len * self.batch_size)
+        if len(self.raw_datatset) < seq_len:
             self.raw_datatset = data
         else:
-            back_index = len(self.raw_datatset) - self.seuqnce_length
+            back_index = len(self.raw_datatset) - seq_len
             self.raw_datatset = self.raw_datatset[back_index:] + data
         self.prepare_training_data()
         self.current_read_chars + len(data)
-        return self.train_X, self.train_Y_classes, self.train_Y_chars
+        x = self.train_X
+        y = self.train_Y_classes
+        if self.model != "class":
+            y = self.train_Y_chars
+        return x, y
 
     def gen_input(self):
         for x, y, z in zip(self.train_X, self.train_Y_classes, self.train_Y_chars):
