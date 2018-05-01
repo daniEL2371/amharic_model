@@ -31,7 +31,7 @@ class TrainingHandler:
             os.mkdir('model_weights')
         self.load_state()
         for i in range(self.current_iter, self.n_iterations):
-            x, y= self.data_generator.gen_input_from_file()
+            x, y = self.data_generator.get_batch()
             cost = self.model.train_on_batch(x, y)
             if i % self.save_weights_on == 0:
                 self.current_iter = i
@@ -47,8 +47,8 @@ class TrainingHandler:
         except:
             os.mkdir(file_name[:-4])
 
-        self.latest_weight = "model_weights/{4}/{0}-{1}-{2:.5}-{3}.h5".format(
-            self.model_name, i, cost, self.model_tag, dirname)
+        self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
+            self.model_name, i, cost,  dirname)
         state = "{0},{1},{2},{3},{4}\n".format(self.n_iterations,
                                                self.current_iter,
                                                self.save_weights_on,
@@ -74,3 +74,20 @@ class TrainingHandler:
                 self.save_weights_on = int(vals[2])
                 self.latest_weight = vals[3]
                 self.model.load_weights(self.latest_weight)
+
+    def load_best_weight(self, tag):
+        file_name = "model_weights/{0}-{1}.txt".format(
+            self.model_name, tag)
+        lines = open(file_name).readlines()
+        min_cost_line = lines[0]
+        min_cost = 9999999
+        iter = 0
+        for line in lines:
+            vals = line.split(',')
+            iter = int(vals[1])
+            cost = float(vals[-1][:-1])
+            if cost < min_cost:
+                min_cost = cost
+                min_cost_line = line
+        file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(self.model_name, iter, cost, tag)
+        self.model.load_weights(file_name)
