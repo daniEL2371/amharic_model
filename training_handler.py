@@ -20,6 +20,7 @@ class TrainingHandler:
         self.model_name = model_name
         self.latest_weight = None
         self.model_tag = None
+        self.current_batch = 0
 
     def train(self, training_tag, n_iterations, save_on, save_model=False):
         self.n_iterations = n_iterations
@@ -49,16 +50,18 @@ class TrainingHandler:
 
         self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
             self.model_name, i, cost,  dirname)
-        state = "{0},{1},{2},{3},{4}\n".format(self.n_iterations,
-                                               self.current_iter,
-                                               self.save_weights_on,
-                                               self.latest_weight,
-                                               cost)
+        state = "{0},{1},{2},{3},{4},{5}\n".format(self.n_iterations,
+                                                   self.current_iter,
+                                                   self.save_weights_on,
+                                                   self.latest_weight,
+                                                   cost,
+                                                   self.data_generator.curren_batch)
         self.model.save_weights(self.latest_weight)
         with open(file_name, mode='a') as file:
             file.write(state)
         progress = (i + self.save_weights_on) * 100 / self.n_iterations
-        print("Progress: {0}% Cost: {1:.5}".format(progress, cost))
+        print("Progress: {0}% Batch: {1} Cost: {2:.5} ".format(
+            progress, self.data_generator.curren_batch, cost))
 
     def load_state(self):
         file_name = "model_weights/{0}-{1}.txt".format(
@@ -74,6 +77,7 @@ class TrainingHandler:
                 self.save_weights_on = int(vals[2])
                 self.latest_weight = vals[3]
                 self.model.load_weights(self.latest_weight)
+                self.data_generator.curren_batch = int(vals[-1])
 
     def load_best_weight(self, tag):
         file_name = "model_weights/{0}-{1}.txt".format(
@@ -85,9 +89,10 @@ class TrainingHandler:
         for line in lines:
             vals = line.split(',')
             iter = int(vals[1])
-            cost = float(vals[-1][:-1])
+            cost = float(vals[4])
             if cost < min_cost:
                 min_cost = cost
                 min_cost_line = line
-        file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(self.model_name, iter, cost, tag)
+        file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(
+            self.model_name, iter, cost, tag)
         self.model.load_weights(file_name)

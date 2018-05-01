@@ -22,8 +22,8 @@ n_batchs = gen.train_x.shape[0]//batch_size
 n_iterations = epoches * n_batchs
 save_on_every = batch_size
 
-n_iterations = 1000
-save_on_every = 100
+n_iterations = 200
+save_on_every = 1
 
 x_dims, y_dims, z_dims = gen.train_x.shape, gen.train_y.shape, gen.train_z.shape
 input_shape = x_dims[1:]
@@ -35,13 +35,13 @@ gen.to_generate = "class"
 gen.curren_batch = 0
 th = TrainingHandler(gen, class_model, "class_model")
 th.train("256-double", n_iterations, save_on_every, save_model=True)
-# th.load_best_weight("256-double")
+th.load_best_weight("256-double")
 
 gen.to_generate = "vowel"
 gen.curren_batch = 0
 th = TrainingHandler(gen, char_model, "char_model")
 th.train("256-double", n_iterations, save_on_every, save_model=True)
-# th.load_best_weight("256-double")
+th.load_best_weight("256-double")
 
 # show_len = 100
 # start = 200

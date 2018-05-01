@@ -33,7 +33,6 @@ class DataGen:
         return x_batch, z_batch
 
     def generate_batch(self):
-        self.curren_batch = 0
         while True:
             if self.curren_batch >= self.total_batchs:
                 self.curren_batch = 0
