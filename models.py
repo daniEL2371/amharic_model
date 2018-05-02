@@ -9,7 +9,6 @@ from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 import os
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-from am_process_text import DataGen
 
 
 def get_class_model(input_shape, output_shape):
@@ -27,3 +26,4 @@ def get_char_model(input_shape, output_shape):
     char_model.add(LSTM(256))
     char_model.add(Dense(output_shape, activation="softmax"))
     char_model.compile(loss="categorical_crossentropy", optimizer="adam")
+    return char_model
