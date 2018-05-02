@@ -7,6 +7,7 @@ from keras.models import Model
 from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 import os
+from timeit import default_timer as timer
 
 
 class TrainingHandler:
@@ -32,13 +33,16 @@ class TrainingHandler:
             os.mkdir('model_weights')
         self.load_state()
         for i in range(self.current_iter, self.n_iterations):
+            start = timer()
             x, y = self.data_generator.get_batch()
             cost = self.model.train_on_batch(x, y)
+            elapsed = timer() - start
             if i % self.save_weights_on == 0:
                 self.current_iter = i
-                self.save_state(i, cost)
+                self.save_state(i, cost, elapsed)
+            
 
-    def save_state(self, i, cost):
+    def save_state(self, i, cost, elapsed_time):
 
         file_name = "model_weights/{0}-{1}.txt".format(
             self.model_name, self.model_tag)
@@ -60,8 +64,8 @@ class TrainingHandler:
         with open(file_name, mode='a') as file:
             file.write(state)
         progress = (i + self.save_weights_on) * 100 / self.n_iterations
-        print("Progress: {0}% Batch: {1} Cost: {2:.5} ".format(
-            progress, self.data_generator.curren_batch, cost))
+        print("Progress: {0}% Batch: {1} Cost: {2:.5} {3:.3}".format(
+            progress, self.data_generator.curren_batch, cost, (elapsed_time)))
 
     def load_state(self):
         file_name = "model_weights/{0}-{1}.txt".format(
@@ -77,7 +81,7 @@ class TrainingHandler:
                 self.save_weights_on = int(vals[2])
                 self.latest_weight = vals[3]
                 self.model.load_weights(self.latest_weight)
-                self.data_generator.curren_batch = int(vals[-1])
+                self.data_generator.curren_batch = int(vals[-1]) + 1
 
     def load_best_weight(self, tag):
         file_name = "model_weights/{0}-{1}.txt".format(
