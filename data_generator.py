@@ -51,10 +51,3 @@ class DataGen:
         self.dataset.close()
 
 
-# batch_size = 4
-# file_path = "data/small.h5"
-# dataGen = DataGen(file_path, batch_size, 25)
-# dataGen.to_generate = "class"
-# x, y = dataGen.get_batch()
-
-# dataGen.close()

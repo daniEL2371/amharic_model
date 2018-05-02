@@ -1,14 +1,9 @@
-import numpy as np
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM
 from keras.layers import Input
 from keras.models import Model
-from keras.callbacks import ModelCheckpoint
-from keras.utils import np_utils
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 
 def get_class_model(input_shape, output_shape):
