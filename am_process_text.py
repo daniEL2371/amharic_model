@@ -23,7 +23,7 @@ class DataGen:
         self.seuqnce_length = seuqnce_length
         self.data_dims = None
         self.data_file = open(dataset_file, mode='r', encoding='utf-8')
-        self.total_num_chars = 9860#14908472
+        self.total_num_chars = 9860  # 14908472
         self.current_read_chars = 0
         self.stride = 1
 
@@ -145,6 +145,58 @@ class DataGen:
         self.current_read_chars + len(data)
         return self.train_X, self.train_Y_classes, self.train_Y_chars
 
+    def encode_text_to_num(self, text):
+        encoded = [self.char2int[c] for c in text]
+        encoded = np.array(encoded).reshape((len(encoded), 1))
+        return encoded
+
+    def encode_char(self, char):
+        class_code, vowel_code = self.char2tup[char]
+        class_hot = one_hot_encode(class_code // 10, 36)
+        vowel_hot = one_hot_encode(vowel_code, 7)
+        return class_hot, vowel_hot
+
+    def text_to_bin(self):
+        batch_size = self.batch_size
+        seq_length = self.seuqnce_length
+        to_read = batch_size + seq_length
+        prev_left = self.data_file.read(seq_length)
+        x_file = open("train_x_input.bin", "wb")
+        y_file = open("train_y_target_class.bin", "wb")
+        z_file = open("train_y_target_vowel.bin", "wb")
+        n_rows = 0
+        n_chars = len(prev_left)
+        while True:
+            new_batch = self.data_file.read(batch_size)
+            seq = prev_left + new_batch
+            new_batch_size = len(new_batch)
+            batch_x = np.empty((new_batch_size, seq_length, 1))
+            batch_y = np.empty((new_batch_size, 36))
+            batch_z = np.empty((new_batch_size, 7))
+            for b in range(new_batch_size):
+                text = seq[b:seq_length + b]
+                taregt = seq[seq_length + b]
+                num_encoded = self.encode_text_to_num(text)
+                batch_x[b] = num_encoded
+
+                class_hot, vowel_hot = self.encode_char(taregt)
+                batch_y[b] = class_hot
+                batch_z[b] = vowel_hot
+        
+            batch_x = batch_x / 350
+            batch_x.tofile(x_file)
+            batch_y.tofile(y_file)
+            batch_z.tofile(z_file)
+            n_rows += batch_x.shape[0]
+            n_chars += new_batch_size
+            prev_left = seq[batch_size:seq_length + batch_size]
+            if new_batch_size < batch_size:
+                break
+        z_file.close()
+        y_file.close()
+        x_file.close()
+        print('Total Rows Saved: {} Total Char: {}'.format(n_rows, n_chars))
+
     def gen_input(self):
         for x, y, z in zip(self.train_X, self.train_Y_classes, self.train_Y_chars):
             yield x, y, z
@@ -174,13 +226,35 @@ class DataGen:
         # self.prepare_training_data()
         # self.iterator = self.gen_input()
 
+    def read_from_bin(self, filename):
+        file = open(filename, "rb")
+        for i in range(10):
+            data = np.fromfile(file, count=4, dtype=np.float32)
+            print(data)
+        file.close()
 
-# gen = DataGen("data/small.txt", "data/geez.txt", 10, 100)
-# gen.process()
+gen = DataGen("data/small.txt", "data/geez.txt", 100, 100)
+gen.process()
+# gen.text_to_bin()
+gen.read_from_bin('train_y_target_vowel.bin')
 
 # bx, by, bz = gen.get_batch()
 # print(by.shape, by.dtype)
 
 # for i in range(10000):
 #     batch = gen.gen_input_from_file()
-    # print(batch[0].shape)
+# print(batch[0].shape)
+
+# numpy as np
+# import random
+
+# alist = []
+# c = 1
+
+# for i in range(1000):
+#     alist.append(i)
+#     if i == (c * 100):
+#         np.array(alist).tofile("file.bin")
+#         print alist
+#         c = c + 1
+#         alist[:] = []  # cl
