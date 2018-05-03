@@ -4,10 +4,9 @@ from keras.layers import Dropout
 from keras.layers import LSTM
 from keras.layers import Input
 from keras.models import Model
-from keras.callbacks import ModelCheckpoint
 from keras.utils import np_utils
 import os
-from timeit import default_timer as timer
+import time
 
 
 class TrainingHandler:
@@ -32,15 +31,17 @@ class TrainingHandler:
         except:
             os.mkdir('model_weights')
         self.load_state()
+        elapsed_time = 0
         for i in range(self.current_iter, self.n_iterations):
-            start = timer()
+            start = time.time()
             x, y = self.data_generator.get_batch()
             cost = self.model.train_on_batch(x, y)
             elapsed = timer() - start
             if i % self.save_weights_on == 0:
+                end = time.time()
+                elapsed_time = end - start
                 self.current_iter = i
-                self.save_state(i, cost, elapsed)
-            
+                self.save_state(i, cost, elapsed_time)
 
     def save_state(self, i, cost, elapsed_time):
 
@@ -64,8 +65,8 @@ class TrainingHandler:
         with open(file_name, mode='a') as file:
             file.write(state)
         progress = (i + self.save_weights_on) * 100 / self.n_iterations
-        print("Progress: {0}% Batch: {1} Cost: {2:.5} {3:.3}".format(
-            progress, self.data_generator.curren_batch, cost, (elapsed_time)))
+        print("Progress: {0}% Batch: {1} Cost: {2:.5} Time: {3:.3}s".format(
+            progress, self.data_generator.curren_batch, cost, elapsed_time))
 
     def load_state(self):
         file_name = "model_weights/{0}-{1}.txt".format(
