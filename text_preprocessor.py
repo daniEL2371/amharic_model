@@ -113,10 +113,3 @@ class TextPreProcessor:
         print('Total Rows Saved: {} Total Char: {}'.format(n_rows, n_chars))
 
 
-cwd = os.getcwd()
-h5_file_path = os.path.join(cwd, "data/data.h5")
-text_file_path = os.path.join(cwd, "data/big.txt")
-charset_file = os.path.join(cwd, "data/charset.txt")
-
-processor = TextPreProcessor(text_file_path, charset_file, 128, 100)
-processor.text_to_bin(h5_file_path)
