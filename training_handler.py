@@ -32,16 +32,16 @@ class TrainingHandler:
             os.mkdir('model_weights')
         self.load_state()
         elapsed_time = 0
+        start = time.time()
         for i in range(self.current_iter, self.n_iterations):
-            start = time.time()
             x, y = self.data_generator.get_batch()
             cost = self.model.train_on_batch(x, y)
-            elapsed = timer() - start
             if i % self.save_weights_on == 0:
                 end = time.time()
                 elapsed_time = end - start
                 self.current_iter = i
                 self.save_state(i, cost, elapsed_time)
+                start = time.time()
 
     def save_state(self, i, cost, elapsed_time):
 
@@ -65,8 +65,8 @@ class TrainingHandler:
         with open(file_name, mode='a') as file:
             file.write(state)
         progress = (i + self.save_weights_on) * 100 / self.n_iterations
-        print("Progress: {0}% Batch: {1} Cost: {2:.5} Time: {3:.3}s".format(
-            progress, self.data_generator.curren_batch, cost, elapsed_time))
+        print("Progress: {0}% Batch: {1}/{2} Cost: {3:.5} Time: {4:.3}s".format(
+            progress, self.data_generator.curren_batch, self.data_generator.total_batchs, cost, elapsed_time))
 
     def load_state(self):
         file_name = "model_weights/{0}-{1}.txt".format(
@@ -101,3 +101,8 @@ class TrainingHandler:
         file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(
             self.model_name, iter, cost, tag)
         self.model.load_weights(file_name)
+    
+    
+        
+        
+        

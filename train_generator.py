@@ -26,7 +26,7 @@ n_iterations = epoches * n_batchs
 save_on_every = batch_size
 
 n_iterations = 200
-save_on_every = 1
+save_on_every = 10
 
 x_dims, y_dims, z_dims = gen.train_x.shape, gen.train_y.shape, gen.train_z.shape
 input_shape = x_dims[1:]
@@ -34,18 +34,21 @@ input_shape = x_dims[1:]
 class_model = get_class_model(input_shape, y_dims[1])
 char_model = get_char_model(input_shape, z_dims[1])
 
-tag_name = "256-double"
 
 gen.to_generate = "class"
 gen.curren_batch = 0
-th = TrainingHandler(gen, class_model, "class_model")
-th.train(tag_name, n_iterations, save_on_every, save_model=True)
-th.load_best_weight(tag_name)
+model_name = "class_model"
+tag_name = "256_double_lstm_dropout"
+save_model(class_model, model_name, tag_name)
+class_trainer = TrainingHandler(gen, class_model, model_name)
+class_trainer.train(tag_name, n_iterations, save_on_every, save_model=True)
 
 gen.to_generate = "vowel"
 gen.curren_batch = 0
-th = TrainingHandler(gen, char_model, "char_model")
-th.train(tag_name, n_iterations, save_on_every, save_model=True)
-th.load_best_weight(tag_name)
+model_name = "char_model"
+tag_name = "256_double_lstm_dropout"
+save_model(char_model, model_name, tag_name)
+char_trainer = TrainingHandler(gen, char_model, model_name)
+char_trainer.train(tag_name, n_iterations, save_on_every, save_model=True)
 
 gen.close()
