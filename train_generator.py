@@ -25,8 +25,8 @@ n_batchs = gen.train_x.shape[0] // batch_size
 n_iterations = epoches * n_batchs
 save_on_every = batch_size
 
-n_iterations = 200
-save_on_every = 10
+n_iterations = 300000
+save_on_every = 500
 
 x_dims, y_dims, z_dims = gen.train_x.shape, gen.train_y.shape, gen.train_z.shape
 input_shape = x_dims[1:]

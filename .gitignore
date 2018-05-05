@@ -1,8 +1,4 @@
 /__pycache__/
 /text_gen_graph
-<<<<<<< HEAD
-/model_weights
-=======
 /model_weights
 *.h5
->>>>>>> f7b7d55504e0d761c08f0d2e714fc2e0533a88d1
