@@ -53,27 +53,32 @@ class TrainingHandler:
             os.stat(file_name[:-4])
         except:
             os.mkdir(file_name[:-4])
-
-        self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
-            self.model_name, i, cost,  dirname)
-        state = "{0},{1},{2},{3},{4},{5},{6}\n".format(self.n_iterations,
-                                                       self.current_iter,
-                                                       self.save_weights_on,
-                                                       self.latest_weight,
-                                                       cost,
-                                                       self.data_generator.curren_batch,
-                                                       self.time_taken)
-        self.model.save_weights(self.latest_weight)
-        with open(file_name, mode='a') as file:
-            file.write(state)
         progress = (i + self.save_weights_on) * 100 / self.n_iterations
         self.time_taken += elapsed_time
         r_iter = self.n_iterations - (i + 1)
         r_time = (self.time_taken / (i + 1)) * r_iter
         r_time = self.pretty_time(r_time)
         taken = self.pretty_time(self.time_taken)
-        print("Progress: {0:.3f}% Batch: {1} Cost: {2:.5f} \nTime: {3:.3f}s Taken: {4} Remaining: {5}".format(
-            progress, self.data_generator.curren_batch, cost, elapsed_time, taken, r_time))
+        progress = "Progress: {0:.3f}% Batch: {1} Cost: {2:.5f} Time: {3:.3f}s Taken: {4} Remaining: {5}".format(
+            progress, self.data_generator.curren_batch, cost, elapsed_time, taken, r_time)
+        print(progress)
+
+        now = time.strftime("%Y-%m-%d %H:%M:%S")
+
+        state = "{0},{1},{2},{3},{4},{5},{6},{7},{8}\n".format(self.n_iterations,
+                                                               self.current_iter,
+                                                               self.save_weights_on,
+                                                               self.latest_weight,
+                                                               cost,
+                                                               self.data_generator.curren_batch,
+                                                               self.time_taken,
+                                                               now,
+                                                               progress)
+        self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
+            self.model_name, i, cost,  dirname)
+        self.model.save_weights(self.latest_weight)
+        with open(file_name, mode='a') as file:
+            file.write(state)
 
     def load_state(self):
         file_name = "model_weights/{0}-{1}.txt".format(

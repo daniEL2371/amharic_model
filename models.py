@@ -2,6 +2,7 @@ from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Dropout
 from keras.layers import LSTM
+from keras.layers import GRU
 from keras.layers import Input
 from keras.models import Model
 import os
@@ -22,21 +23,29 @@ def load_model(model_name):
         return load_model
 
 
-def get_class_model(input_shape, output_shape):
+def get_class_model(input_shape, output_shape, lstm_cell=True):
+    if lstm_cell:
+        CELL = LSTM
+    else:
+        CELL = GRU
     class_model = Sequential()
-    class_model.add(LSTM(256, input_shape=input_shape, return_sequences=True))
-    class_model.add(Dropout(.2))
-    class_model.add(LSTM(256))
+    class_model.add(CELL(256, input_shape=input_shape, return_sequences=True))
+    class_model.add(Dropout(.4))
+    class_model.add(CELL(256))
     class_model.add(Dense(output_shape, activation="softmax"))
     class_model.compile(loss="categorical_crossentropy", optimizer="adam")
     return class_model
 
 
-def get_char_model(input_shape, output_shape):
+def get_char_model(input_shape, output_shape, lstm_cell=True):
+    if lstm_cell:
+        CELL = LSTM
+    else:
+        CELL = GRU
     char_model = Sequential()
-    char_model.add(LSTM(256, input_shape=input_shape, return_sequences=True))
-    char_model.add(Dropout(.2))
-    char_model.add(LSTM(256))
+    char_model.add(CELL(256, input_shape=input_shape, return_sequences=True))
+    char_model.add(Dropout(.4))
+    char_model.add(CELL(256))
     char_model.add(Dense(output_shape, activation="softmax"))
     char_model.compile(loss="categorical_crossentropy", optimizer="adam")
     return char_model
