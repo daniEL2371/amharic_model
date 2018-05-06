@@ -38,14 +38,18 @@ tag_name = args.tag_name
 
 gen.to_generate = "class"
 gen.curren_batch = 0
-th = TrainingHandler(gen, class_model, "class_model")
-th.train(tag_name, n_iterations, save_on_every, save_model=True)
-th.load_best_weight(tag_name)
+model_name = "class_model"
+tag_name = "256_double_lstm_dropout"
+save_model(class_model, model_name, tag_name)
+class_trainer = TrainingHandler(gen, class_model, model_name)
+class_trainer.train(tag_name, n_iterations, save_on_every, save_model=True)
 
 gen.to_generate = "vowel"
 gen.curren_batch = 0
-th = TrainingHandler(gen, char_model, "char_model")
-th.train(tag_name, n_iterations, save_on_every, save_model=True)
-th.load_best_weight(tag_name)
+model_name = "char_model"
+tag_name = "256_double_lstm_dropout"
+save_model(char_model, model_name, tag_name)
+char_trainer = TrainingHandler(gen, char_model, model_name)
+char_trainer.train(tag_name, n_iterations, save_on_every, save_model=True)
 
 gen.close()

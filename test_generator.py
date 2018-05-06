@@ -26,15 +26,20 @@ input_shape = x_dims[1:]
 class_model = get_class_model(input_shape, y_dims[1])
 char_model = get_char_model(input_shape, z_dims[1])
 
-tag_name = "256-double"
 
 gen.to_generate = "class"
 gen.curren_batch = 0
-class_trainer = TrainingHandler(gen, class_model, "class_model")
+model_name = "class_model"
+tag_name = "256_double_lstm_dropout"
+save_model(class_model, model_name, tag_name)
+class_trainer = TrainingHandler(gen, class_model, model_name)
 class_trainer.load_best_weight(tag_name)
 
 gen.to_generate = "vowel"
 gen.curren_batch = 0
+model_name = "char_model"
+tag_name = "256_double_lstm_dropout"
+save_model(char_model, model_name, tag_name)
 char_trainer = TrainingHandler(gen, char_model, "char_model")
 char_trainer.load_best_weight(tag_name)
 
