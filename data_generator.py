@@ -9,7 +9,10 @@ class DataGen:
         self.batch_size = batch_size
         self.train_x = self.dataset["train_x"]
         self.train_y = self.dataset["train_y"]
-        self.train_z = self.dataset["train_z"]
+        try:
+            self.train_z = self.dataset["train_z"]
+        except:
+            pass
         self.curren_batch = 0
         self.total_batchs = self.train_x.shape[0] // self.batch_size
         self.to_generate = "class"

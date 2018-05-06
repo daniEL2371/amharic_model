@@ -27,12 +27,10 @@ n_iterations = int(epoches * n_batchs)
 save_on_every = args.save_on
 print("Total Iterations: {0} Total Batchs: {1}".format(n_iterations, n_batchs))
 
-
-x_dims, y_dims, z_dims = gen.train_x.shape, gen.train_y.shape, gen.train_z.shape
+x_dims, y_dims = gen.train_x.shape, gen.train_y.shape
 input_shape = x_dims[1:]
 
 class_model = get_class_model(input_shape, y_dims[1], lstm_cell=False)
-char_model = get_char_model(input_shape, z_dims[1], lstm_cell=False)
 
 tag_name = args.tag_name
 
@@ -43,11 +41,11 @@ save_model(class_model, model_name, tag_name)
 class_trainer = TrainingHandler(gen, class_model, model_name)
 class_trainer.train(tag_name, n_iterations, save_on_every, save_model=True)
 
-gen.to_generate = "vowel"
-gen.curren_batch = 0
-model_name = "char_model"
-save_model(char_model, model_name, tag_name)
-char_trainer = TrainingHandler(gen, char_model, model_name)
-char_trainer.train(tag_name, n_iterations, save_on_every, save_model=True)
+# gen.to_generate = "vowel"
+# gen.curren_batch = 0
+# model_name = "char_model"
+# save_model(char_model, model_name, tag_name)
+# char_trainer = TrainingHandler(gen, char_model, model_name)
+# char_trainer.train(tag_name, n_iterations, save_on_every, save_model=True)
 
 gen.close()
