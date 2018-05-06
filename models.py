@@ -19,7 +19,7 @@ def get_class_model(input_shape, output_shape):
 def get_char_model(input_shape, output_shape):
     char_model = Sequential()
     char_model.add(LSTM(256, input_shape=input_shape, return_sequences=True))
-    class_model.add(Dropout(.2))
+    char_model.add(Dropout(.2))
     char_model.add(LSTM(256))
     char_model.add(Dense(output_shape, activation="softmax"))
     char_model.compile(loss="categorical_crossentropy", optimizer="adam")

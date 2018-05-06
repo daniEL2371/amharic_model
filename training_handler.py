@@ -21,6 +21,7 @@ class TrainingHandler:
         self.latest_weight = None
         self.model_tag = None
         self.current_batch = 0
+        self.time_taken = 0
 
     def train(self, training_tag, n_iterations, save_on, save_model=False):
         self.n_iterations = n_iterations
@@ -32,16 +33,16 @@ class TrainingHandler:
             os.mkdir('model_weights')
         self.load_state()
         elapsed_time = 0
+        start = time.time()
         for i in range(self.current_iter, self.n_iterations):
-            start = time.time()
             x, y = self.data_generator.get_batch()
             cost = self.model.train_on_batch(x, y)
-            elapsed = timer() - start
             if i % self.save_weights_on == 0:
                 end = time.time()
                 elapsed_time = end - start
                 self.current_iter = i
                 self.save_state(i, cost, elapsed_time)
+                start = time.time()
 
     def save_state(self, i, cost, elapsed_time):
 
@@ -55,18 +56,24 @@ class TrainingHandler:
 
         self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
             self.model_name, i, cost,  dirname)
-        state = "{0},{1},{2},{3},{4},{5}\n".format(self.n_iterations,
-                                                   self.current_iter,
-                                                   self.save_weights_on,
-                                                   self.latest_weight,
-                                                   cost,
-                                                   self.data_generator.curren_batch)
+        state = "{0},{1},{2},{3},{4},{5},{6}\n".format(self.n_iterations,
+                                                       self.current_iter,
+                                                       self.save_weights_on,
+                                                       self.latest_weight,
+                                                       cost,
+                                                       self.data_generator.curren_batch,
+                                                       self.time_taken)
         self.model.save_weights(self.latest_weight)
         with open(file_name, mode='a') as file:
             file.write(state)
         progress = (i + self.save_weights_on) * 100 / self.n_iterations
-        print("Progress: {0}% Batch: {1} Cost: {2:.5} Time: {3:.3}s".format(
-            progress, self.data_generator.curren_batch, cost, elapsed_time))
+        self.time_taken += elapsed_time
+        r_iter = self.n_iterations - (i + 1)
+        r_time = (self.time_taken / (i + 1)) * r_iter
+        r_time = self.pretty_time(r_time)
+        taken = self.pretty_time(self.time_taken)
+        print("Progress: {0:.3f}% Batch: {1} Cost: {2:.5f} \nTime: {3:.3f}s Taken: {4} Remaining: {5}".format(
+            progress, self.data_generator.curren_batch, cost, elapsed_time, taken, r_time))
 
     def load_state(self):
         file_name = "model_weights/{0}-{1}.txt".format(
@@ -82,7 +89,8 @@ class TrainingHandler:
                 self.save_weights_on = int(vals[2])
                 self.latest_weight = vals[3]
                 self.model.load_weights(self.latest_weight)
-                self.data_generator.curren_batch = int(vals[-1]) + 1
+                self.data_generator.curren_batch = int(vals[5]) + 1
+                self.time_taken = float(vals[6])
 
     def load_best_weight(self, tag):
         file_name = "model_weights/{0}-{1}.txt".format(
@@ -101,3 +109,9 @@ class TrainingHandler:
         file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(
             self.model_name, iter, cost, tag)
         self.model.load_weights(file_name)
+
+    def pretty_time(self, seconds):
+        mins, secs = divmod(seconds, 60)
+        hrs, mins = divmod(mins, 60)
+        days, hrs = divmod(hrs, 24)
+        return "{0} days, {1} hrs, {2} mins, {3:.2f}s".format(days, hrs, mins, secs)
