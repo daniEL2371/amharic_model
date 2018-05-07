@@ -5,6 +5,9 @@ from data_generator import DataGen
 from models import *
 from text_preprocessor import TextPreProcessor
 from training_handler import TrainingHandler
+from util import *
+
+highpriority()
 
 seq_length = 100
 batch_size = 128

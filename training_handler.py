@@ -7,6 +7,7 @@ from keras.models import Model
 from keras.utils import np_utils
 import os
 import time
+from check_point_manager import *
 
 
 class TrainingHandler:
@@ -22,11 +23,14 @@ class TrainingHandler:
         self.model_tag = None
         self.current_batch = 0
         self.time_taken = 0
+        self.checkpoint = CheckpointManager()
 
     def train(self, training_tag, n_iterations, save_on, save_model=False):
         self.n_iterations = n_iterations
         self.save_weights_on = save_on
         self.model_tag = training_tag
+        s = "{0}_{1}".format(self.model_name, self.model_tag)
+        self.checkpoint.prepare(s)
         try:
             os.stat('model_weights')
         except:
@@ -65,7 +69,7 @@ class TrainingHandler:
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
 
-        state = "{0},{1},{2},{3},{4},{5},{6},{7},{8}\n".format(self.n_iterations,
+        state = "{0},{1},{2},{3},{4},{5},{6},{7},{8}".format(self.n_iterations,
                                                                self.current_iter,
                                                                self.save_weights_on,
                                                                self.latest_weight,
@@ -77,25 +81,37 @@ class TrainingHandler:
         self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
             self.model_name, i, cost,  dirname)
         self.model.save_weights(self.latest_weight)
-        with open(file_name, mode='a') as file:
-            file.write(state)
+        self.checkpoint.save(state)
+        # with open(file_name, mode='a') as file:
+        #     file.write(state)
 
     def load_state(self):
-        file_name = "model_weights/{0}-{1}.txt".format(
-            self.model_name, self.model_tag)
-        if os.path.exists(file_name):
-            steps = open(file_name).readlines()
-            if len(steps) > 0:
-                last_step = steps[-1]
-                print("Loading State: " + last_step)
-                vals = last_step[:-1].split(',')
-                self.n_iterations = int(vals[0])
-                self.current_iter = int(vals[1]) + 1
-                self.save_weights_on = int(vals[2])
-                self.latest_weight = vals[3]
-                self.model.load_weights(self.latest_weight)
-                self.data_generator.curren_batch = int(vals[5]) + 1
-                self.time_taken = float(vals[6])
+        last_step = self.checkpoint.get_last_state()
+        if last_step != None:
+            print("Loading State: " + last_step)
+            vals = last_step[:-1].split(',')
+            self.n_iterations = int(vals[0])
+            self.current_iter = int(vals[1]) + 1
+            self.save_weights_on = int(vals[2])
+            self.latest_weight = vals[3]
+            self.model.load_weights(self.latest_weight)
+            self.data_generator.curren_batch = int(vals[5]) + 1
+            self.time_taken = float(vals[6])
+        # file_name = "model_weights/{0}-{1}.txt".format(
+        #     self.model_name, self.model_tag)
+        # if os.path.exists(file_name):
+        #     steps = open(file_name).readlines()
+        #     if len(steps) > 0:
+        #         last_step = steps[-1]
+        #         print("Loading State: " + last_step)
+        #         vals = last_step[:-1].split(',')
+        #         self.n_iterations = int(vals[0])
+        #         self.current_iter = int(vals[1]) + 1
+        #         self.save_weights_on = int(vals[2])
+        #         self.latest_weight = vals[3]
+        #         self.model.load_weights(self.latest_weight)
+        #         self.data_generator.curren_batch = int(vals[5]) + 1
+        #         self.time_taken = float(vals[6])
 
     def load_best_weight(self, tag):
         file_name = "model_weights/{0}-{1}.txt".format(
@@ -120,3 +136,6 @@ class TrainingHandler:
         hrs, mins = divmod(mins, 60)
         days, hrs = divmod(hrs, 24)
         return "{0} days, {1} hrs, {2} mins, {3:.2f}s".format(days, hrs, mins, secs)
+
+    def clear_old_states(self):
+        self.clear_old_states()
