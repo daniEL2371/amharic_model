@@ -41,6 +41,26 @@ class CheckpointManager:
         else:
             return None
 
+    def get_best_state(self):
+        q = "SELECT * FROM {0};".format(
+            self.table_name)
+        self.open()
+        self.cursor.execute(q)
+        rows = self.cursor.fetchall()
+        best_row = rows[0]
+        min_cost = 9999999
+        iter = 0
+        for row in rows:
+            state = row[1]
+            vals = state.split(',')
+            iter = int(vals[1])
+            cost = float(vals[4])
+            if cost < min_cost:
+                min_cost = cost
+                best_row = state
+        self.close()
+        return best_row, min_cost, iter
+
     def clear(self):
         q = "DROP TABLE IF EXISTS {0};".format(self.table_name)
         self.open()

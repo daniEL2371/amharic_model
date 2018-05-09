@@ -60,7 +60,7 @@ class TrainingHandler:
         progress = (i + self.save_weights_on) * 100 / self.n_iterations
         self.time_taken += elapsed_time
         r_iter = self.n_iterations - (i + 1)
-        r_time = (self.time_taken / (i + 1)) * r_iter
+        r_time = (elapsed_time) * r_iter/self.save_weights_on
         r_time = self.pretty_time(r_time)
         taken = self.pretty_time(self.time_taken)
         progress = "Progress: {0:.3f}% Batch: {1} Cost: {2:.5f} Time: {3:.3f}s Taken: {4} Remaining: {5}".format(
@@ -70,26 +70,24 @@ class TrainingHandler:
         now = time.strftime("%Y-%m-%d %H:%M:%S")
 
         state = "{0},{1},{2},{3},{4},{5},{6},{7},{8}".format(self.n_iterations,
-                                                               self.current_iter,
-                                                               self.save_weights_on,
-                                                               self.latest_weight,
-                                                               cost,
-                                                               self.data_generator.curren_batch,
-                                                               self.time_taken,
-                                                               now,
-                                                               progress)
+                                                             self.current_iter,
+                                                             self.save_weights_on,
+                                                             self.latest_weight,
+                                                             cost,
+                                                             self.data_generator.curren_batch,
+                                                             self.time_taken,
+                                                             now,
+                                                             progress)
         self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
             self.model_name, i, cost,  dirname)
         self.model.save_weights(self.latest_weight)
         self.checkpoint.save(state)
-        # with open(file_name, mode='a') as file:
-        #     file.write(state)
 
     def load_state(self):
-        last_step = self.checkpoint.get_last_state()
-        if last_step != None:
-            print("Loading State: " + last_step)
-            vals = last_step[:-1].split(',')
+        last_state = self.checkpoint.get_last_state()[1]
+        if last_state != None:
+            print("Loading State: " + last_state)
+            vals = last_state.split(',')
             self.n_iterations = int(vals[0])
             self.current_iter = int(vals[1]) + 1
             self.save_weights_on = int(vals[2])
@@ -97,36 +95,9 @@ class TrainingHandler:
             self.model.load_weights(self.latest_weight)
             self.data_generator.curren_batch = int(vals[5]) + 1
             self.time_taken = float(vals[6])
-        # file_name = "model_weights/{0}-{1}.txt".format(
-        #     self.model_name, self.model_tag)
-        # if os.path.exists(file_name):
-        #     steps = open(file_name).readlines()
-        #     if len(steps) > 0:
-        #         last_step = steps[-1]
-        #         print("Loading State: " + last_step)
-        #         vals = last_step[:-1].split(',')
-        #         self.n_iterations = int(vals[0])
-        #         self.current_iter = int(vals[1]) + 1
-        #         self.save_weights_on = int(vals[2])
-        #         self.latest_weight = vals[3]
-        #         self.model.load_weights(self.latest_weight)
-        #         self.data_generator.curren_batch = int(vals[5]) + 1
-        #         self.time_taken = float(vals[6])
 
     def load_best_weight(self, tag):
-        file_name = "model_weights/{0}-{1}.txt".format(
-            self.model_name, tag)
-        lines = open(file_name).readlines()
-        min_cost_line = lines[0]
-        min_cost = 9999999
-        iter = 0
-        for line in lines:
-            vals = line.split(',')
-            iter = int(vals[1])
-            cost = float(vals[4])
-            if cost < min_cost:
-                min_cost = cost
-                min_cost_line = line
+        best_row, min_cost, iter = self.checkpoint.get_best_state()
         file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(
             self.model_name, iter, cost, tag)
         self.model.load_weights(file_name)
