@@ -1,4 +1,15 @@
 import numpy as np
+import argparse
+
+def parse_training_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-b', '--batch', dest='batch_size', type=int, default=128)
+    parser.add_argument('-e' '--epochs', dest='epoches', type=float, default=1)
+    parser.add_argument('-s', '--save_on', dest='save_on', default=1, type=int)
+    parser.add_argument('-i', '--input', dest='input_file')
+    parser.add_argument('-t', '--tag', dest='tag_name')
+    args = parser.parse_args()
+    return args
 
 def one_hot_encode(val, length):
     a = np.zeros((length,))

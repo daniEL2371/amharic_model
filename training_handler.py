@@ -84,10 +84,10 @@ class TrainingHandler:
         self.checkpoint.save(state)
 
     def load_state(self):
-        last_state = self.checkpoint.get_last_state()[1]
+        last_state = self.checkpoint.get_last_state()
         if last_state != None:
-            print("Loading State: " + last_state)
-            vals = last_state.split(',')
+            print("Loading State: " + last_state[1])
+            vals = last_state[1].split(',')
             self.n_iterations = int(vals[0])
             self.current_iter = int(vals[1]) + 1
             self.save_weights_on = int(vals[2])
