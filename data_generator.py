@@ -13,7 +13,7 @@ class DataGen:
             self.train_z = self.dataset["train_z"]
         except:
             pass
-        self.curren_batch = 0
+        self.current_batch = 0
         self.total_batchs = self.train_x.shape[0] // self.batch_size
         self.to_generate = "class"
         self.iterator = self.generate_batch()
@@ -36,13 +36,13 @@ class DataGen:
 
     def generate_batch(self):
         while True:
-            if self.curren_batch >= self.total_batchs:
-                self.curren_batch = 0
+            if self.current_batch >= self.total_batchs:
+                self.current_batch = 0
             if self.to_generate == "class":
-                yield self.read_class_batch(self.curren_batch)
+                yield self.read_class_batch(self.current_batch)
             else:
-                yield self.read_vowel_batch(self.curren_batch)
-            self.curren_batch += 1
+                yield self.read_vowel_batch(self.current_batch)
+            self.current_batch += 1
 
     def get_batch(self):
         x, y = next(self.iterator)

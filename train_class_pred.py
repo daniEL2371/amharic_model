@@ -27,7 +27,7 @@ x_dims, y_dims, z_dims = gen.train_x.shape, gen.train_y.shape, gen.train_z.shape
 input_shape = x_dims[1:]
 
 
-class_model = get_class_model(input_shape, y_dims[1], lstm_cell=False)
+class_model = get_model(input_shape, y_dims[1], lstm_cell=False)
 
 
 gen.to_generate = "class"

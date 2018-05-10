@@ -21,9 +21,12 @@ class TrainingHandler:
         self.model_name = model_name
         self.latest_weight = None
         self.model_tag = None
-        self.current_batch = 0
         self.time_taken = 0
         self.checkpoint = CheckpointManager()
+        try:
+            os.stat('model_weights')
+        except:
+            os.mkdir('model_weights')
 
     def train(self, training_tag, n_iterations, save_on, save_model=False):
         self.n_iterations = n_iterations
@@ -31,10 +34,6 @@ class TrainingHandler:
         self.model_tag = training_tag
         s = "{0}_{1}".format(self.model_name, self.model_tag)
         self.checkpoint.prepare(s)
-        try:
-            os.stat('model_weights')
-        except:
-            os.mkdir('model_weights')
         self.load_state()
         elapsed_time = 0
         start = time.time()
@@ -63,8 +62,9 @@ class TrainingHandler:
         r_time = (elapsed_time) * r_iter/self.save_weights_on
         r_time = self.pretty_time(r_time)
         taken = self.pretty_time(self.time_taken)
-        progress = "Progress: {0:.3f}% Batch: {1} Cost: {2:.5f} Time: {3:.3f}s Taken: {4} Remaining: {5}".format(
-            progress, self.data_generator.curren_batch, cost, elapsed_time, taken, r_time)
+        epoch = i//self.data_generator.total_batchs
+        progress = "Progress: {0:.3f}% Epoch: {1} Batch: {2}/{7} Cost: {3:.5f} Time: {4:.3f}s Taken: {5} Remaining: {6}".format(
+            progress, epoch, self.data_generator.current_batch, cost, elapsed_time, taken, r_time, self.data_generator.total_batchs)
         print(progress)
 
         now = time.strftime("%Y-%m-%d %H:%M:%S")
@@ -74,7 +74,7 @@ class TrainingHandler:
                                                              self.save_weights_on,
                                                              self.latest_weight,
                                                              cost,
-                                                             self.data_generator.curren_batch,
+                                                             self.data_generator.current_batch,
                                                              self.time_taken,
                                                              now,
                                                              progress)
@@ -93,8 +93,11 @@ class TrainingHandler:
             self.save_weights_on = int(vals[2])
             self.latest_weight = vals[3]
             self.model.load_weights(self.latest_weight)
-            self.data_generator.curren_batch = int(vals[5]) + 1
+            self.data_generator.current_batch = int(vals[5]) + 1
             self.time_taken = float(vals[6])
+    
+    
+            
 
     def load_best_weight(self, tag):
         best_row, min_cost, iter = self.checkpoint.get_best_state()
@@ -106,7 +109,7 @@ class TrainingHandler:
         mins, secs = divmod(seconds, 60)
         hrs, mins = divmod(mins, 60)
         days, hrs = divmod(hrs, 24)
-        return "{0} days, {1} hrs, {2} mins, {3:.2f}s".format(days, hrs, mins, secs)
+        return "{0}d, {1}h, {2}m, {3:.2f}s".format(days, hrs, mins, secs)
 
     def clear_old_states(self):
         self.clear_old_states()

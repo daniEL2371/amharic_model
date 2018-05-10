@@ -27,7 +27,7 @@ print("Total Iterations: {0} Total Batchs: {1}".format(n_iterations, n_batchs))
 x_dims, y_dims, z_dims = gen.train_x.shape, gen.train_y.shape, gen.train_z.shape
 input_shape = x_dims[1:]
 
-char_model = get_char_model(input_shape, z_dims[1], lstm_cell=False)
+char_model = get_model(input_shape, z_dims[1], lstm_cell=False)
 
 gen.to_generate = "vowel"
 gen.curren_batch = 0

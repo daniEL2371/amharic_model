@@ -66,3 +66,12 @@ class CheckpointManager:
         self.open()
         self.cursor.execute(q)
         self.close()
+
+    def get_states(self):
+        q = "SELECT * FROM {0};".format(self.table_name)
+        self.open()
+        self.cursor.execute(q)
+        rows = self.cursor.fetchall()
+        self.close()
+        return rows
+        
