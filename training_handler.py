@@ -25,10 +25,12 @@ class TrainingLogger(keras.callbacks.Callback):
         self.current_epoch = 0
         self.total_time_taken = 0
         self.checkpoint = None
+        self.start_time = 0
         self.losses = []
 
     def on_train_begin(self, logs={}):
         self.model.batch = 10
+        self.start_time = time.time()
         try:
             os.stat("model_weights/" + self.model_name)
         except:
@@ -47,14 +49,17 @@ class TrainingLogger(keras.callbacks.Callback):
 
     def on_batch_begin(self, batch, logs={}):
         self.batch_time_start = time.time()
-        self.total_time_taken += self.batch_time_start
         return
 
     def on_batch_end(self, batch, logs={}):
-        time_taken = time.time() - self.batch_time_start
+        time_taken = time.time() - self.start_time
+        batch_time = time.time() - self.batch_time_start
         current_batch = logs.get('batch') + 1
         if current_batch % self.save_on == 0:
-            remaining_time = time_taken * (self.total_batches - current_batch)
+            total_iter = self.total_batches * self.total_epoches
+            till_now = self.current_epoch * self.total_batches + batch
+            rem_iter = total_iter - till_now
+            remaining_time = rem_iter * batch_time
             progress = (self.total_batches * (self.current_epoch - 1) +
                         current_batch) * 100 / (self.total_batches * self.total_epoches)
             cost = logs.get('loss')
@@ -108,23 +113,25 @@ class TrainingHandler:
         history.checkpoint.prepare(history.model_name)
         history.current_epoch = init_epoch
 
-        
         if init_epoch == epoches:
             print("Training has ended ")
             return
         per_epoch = self.data_generator.total_batches
-        folder = "model_weights/{0}_{1}/".format(self.model_name, self.model_tag)
+        folder = "model_weights/{0}_{1}/".format(
+            self.model_name, self.model_tag)
         checkpoint_file = folder + "model_weight-{epoch:02d}-{loss:.4f}.hdf5"
-        checkpoint = ModelCheckpoint(checkpoint_file, monitor='loss', verbose=1)
+        checkpoint = ModelCheckpoint(
+            checkpoint_file, monitor='loss', verbose=1)
         self.model.fit_generator(gen, steps_per_epoch=per_epoch,
-                                 verbose=0, epochs=epoches, 
+                                 verbose=0, epochs=epoches,
                                  initial_epoch=init_epoch,
                                  callbacks=[checkpoint, history],
                                  shuffle=True)
 
     def load_last_state(self):
-        folder = "model_weights/{0}_{1}/*.hdf5".format(self.model_name, self.model_tag)
-        list_of_files = glob.glob(folder) 
+        folder = "model_weights/{0}_{1}/*.hdf5".format(
+            self.model_name, self.model_tag)
+        list_of_files = glob.glob(folder)
         if len(list_of_files) == 0:
             return 0
         last_state = list(sorted(list_of_files))[-1]

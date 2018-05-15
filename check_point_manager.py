@@ -3,8 +3,8 @@ import sqlite3
 
 class CheckpointManager:
 
-    def __init__(self):
-        self.table_name = None
+    def __init__(self, table_name=None):
+        self.table_name = table_name
 
     def close(self):
         self.conn.commit()
