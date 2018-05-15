@@ -18,11 +18,6 @@ cwd = os.getcwd()
 h5_file_path = os.path.join(cwd, file)
 gen = DataGen(h5_file_path, batch_size)
 
-n_batchs = gen.total_batches
-n_iterations = int(epoches * n_batchs)
-
-print("Total Iterations: {0} Total Batchs: {1}".format(n_iterations, n_batchs))
-
 x_dims, y_dims = gen.train_x.shape, gen.train_y.shape
 input_shape = (100, x_dims[1], x_dims[2])
 
