@@ -10,23 +10,19 @@ from text_preprocessor import TextPreProcessor
 batch_size = 100
 seq_length = 100
 tp = TextPreProcessor("data/charset.txt", 100, 100)
-print(tp.nums_to_chars([2,6,7,1]))
-# model = load_best_state("whole_char", "128_GRU")
 
-# text = open('data/test.txt', encoding='utf-8').read()
-# xs = []
-# ys = []
-# for i in range(len(text) - seq_length - 1):
-#     if i == 100:
-#         break
-#     seed = text[i:i+seq_length]
-#     target = text[seq_length + i]
-#     x, y = tp.text_vec(seed, target)
-#     xs.append(x)
-#     ys.append(y)
+model = load_best_state("whole_char", "128_GRU")
 
-# x = np.stack(xs)
-# y = np.stack(ys)
-# result = model.predict(x, batch_size=100)
-# maxes = result.argmax(axis=1)
-# print(maxes.shape)
+text = open('data/test.txt', encoding='utf-8').read()
+gen = []
+for i in range(len(text) - seq_length - 1):
+    seed = text[i:i+seq_length]
+    target = text[seq_length + i]
+    x, y = tp.text_vec(seed, target)
+    x = x.reshape((1, x.shape[0], x.shape[1]))
+    result = model.predict(x)
+    m  = result.argmax()
+    gen.append(m)
+
+t = ''.join(tp.nums_to_chars(gen))
+print(t)

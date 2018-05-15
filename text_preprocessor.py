@@ -8,10 +8,9 @@ class TextPreProcessor:
 
     def __init__(self, charset_file, batch_size, seuqnce_length):
         self.charset_file = charset_file
-        self.char2int2 = {}
         self.char2int = {}
         self.int2char = {}
-        self.int2char2 = {}
+        self.char2tup = {}
         self.batch_size = batch_size
         self.seuqnce_length = seuqnce_length
         self.n_consonants = 0
@@ -23,35 +22,25 @@ class TextPreProcessor:
         char2int = {}
         int2char = {}
         char2tup = {}
-        int2char2 = {}
-        char2int2 = {}
         data[-2] = data[-2] + '\n'
         j = 0
         for k in range(len(data)):
             row = data[k][:-1].split(',')
             for i in range(len(row)):
-                char2int[row[i]] = (k * 10 + i)
-                int2char[k * 10 + i] = row[i]
                 char2tup[row[i]] = (k, i)
-                int2char2[j] = row[i]
-                char2int2[row[i]] = j
+                int2char[j] = row[i]
+                char2int[row[i]] = j
                 j += 1
 
         self.int2char = int2char
         self.char2int = char2int
         self.char2tup = char2tup
-        self.int2char2 = int2char2
-        self.char2int2 = char2int2
         self.n_consonants = len(data)
         self.n_vowels = 10
 
+    
     def encode_text_to_num(self, text):
         encoded = [self.char2int[c] for c in text]
-        encoded = np.array(encoded).reshape((len(encoded), 1))
-        return encoded
-    
-    def encode_text_to_num2(self, text):
-        encoded = [self.char2int2[c] for c in text]
         encoded = np.array(encoded).reshape((len(encoded), 1))
         return encoded
 
@@ -60,6 +49,20 @@ class TextPreProcessor:
         class_hot = one_hot_encode(class_code, self.n_consonants)
         vowel_hot = one_hot_encode(vowel_code, self.n_vowels)
         return class_hot, vowel_hot
+
+    def text_vec(self, text, target):
+        output_size = len(self.char2int)
+        num_encoded = self.encode_text_to_num(text)
+        hots = []
+        for num in num_encoded:
+            hots.append(one_hot_encode(num, output_size))
+        hots = np.stack(hots)
+        output = one_hot_encode(self.char2int[target], output_size)
+
+        return hots, output
+    
+    def nums_to_chars(self, nums):
+        return [self.int2char[i] for i in nums]
 
     def text_to_bin(self, corpus, c_filename, v_filename,  n_samples=-1):
         if os.path.exists(c_filename):
@@ -72,7 +75,7 @@ class TextPreProcessor:
         prev_left = tex_data_file.read(seq_length)
         data_file_class = h5py.File(c_filename, "a")
         data_file_vowel = h5py.File(v_filename, "a")
-
+        output_size = len(self.char2int)
         chunk_size = 40 * seq_length * batch_size
         train_x_c = data_file_class.create_dataset(
             'train_x', (0, seq_length, 1),
@@ -104,14 +107,17 @@ class TextPreProcessor:
             for b in range(batch_size):
                 text = seq[b:seq_length + b]
                 taregt = seq[seq_length + b]
-                num_encoded = self.encode_text_to_num(text)
-                batch_x[b] = num_encoded
+                num_encoded = self.encode_text_to_num2(text)
+                hots = []
+                for num in num_encoded:
+                    hots.append(one_hot_encode(num, output_size))
+                hots = np.stack(hots)
+                batch_x[b] = hots
 
                 class_hot, vowel_hot = self.encode_char(taregt)
                 batch_y[b] = class_hot
                 batch_z[b] = vowel_hot
 
-            batch_x = batch_x / (self.n_consonants * 10)
             train_x_c.resize(train_x_c.shape[0] + batch_size, axis=0)
             train_x_c[-batch_size:] = batch_x
 
@@ -148,7 +154,7 @@ class TextPreProcessor:
         tex_data_file = open(corpus, mode='r', encoding='utf-8')
         prev_left = tex_data_file.read(seq_length)
         data_file = h5py.File(filename, "a")
-        output_size = len(self.char2int2)
+        output_size = len(self.char2int)
         chunk_size = seq_length * batch_size
         train_X = data_file.create_dataset(
             'train_x', (0, seq_length, output_size),
@@ -171,14 +177,14 @@ class TextPreProcessor:
             for b in range(batch_size):
                 text = seq[b:seq_length + b]
                 taregt = seq[seq_length + b]
-                num_encoded = self.encode_text_to_num2(text)
+                num_encoded = self.encode_text_to_num(text)
                 hots = []
                 for num in num_encoded:
                     hots.append(one_hot_encode(num, output_size))
                 hots = np.stack(hots)
                 batch_x[b] = hots
 
-                output = one_hot_encode(self.char2int2[taregt], output_size)
+                output = one_hot_encode(self.char2int[taregt], output_size)
                 batch_y[b] = output
 
             train_X.resize(train_X.shape[0] + batch_size, axis=0)
@@ -200,18 +206,6 @@ class TextPreProcessor:
         tex_data_file.close()
         print('Total Rows Saved: {} Total Char: {}'.format(n_rows, n_chars))
 
-    def text_vec2(self, text, target):
-        output_size = len(self.char2int2)
-        num_encoded = self.encode_text_to_num2(text)
-        hots = []
-        for num in num_encoded:
-            hots.append(one_hot_encode(num, output_size))
-        hots = np.stack(hots)
-        output = one_hot_encode(self.char2int2[target], output_size)
-
-        return hots, output
-    
-    def nums_to_chars2(self, nums):
-        return [self.int2char2[i] for i in nums]
+   
 
 
