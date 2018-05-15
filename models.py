@@ -36,15 +36,16 @@ def get_model(input_shape, output_shape, lstm_cell=True):
     else:
         CELL = GRU
     class_model = Sequential()
-    class_model.add(CELL(256, input_shape=input_shape,
-                         return_sequences=True, 
-                         kernel_initializer=initializer, 
-                         recurrent_initializer=initializer))
-    class_model.add(Dropout(.4))
-    class_model.add(CELL(256, kernel_initializer=initializer,
-                         recurrent_initializer=initializer))
-    class_model.add(Dense(output_shape, activation="softmax",
-                          kernel_initializer=initializer))
-    rms = optimizers.RMSprop(lr=0.002, rho=0.9, epsilon=None, decay=0.99)
-    class_model.compile(loss="categorical_crossentropy", optimizer=rms)
+    class_model.add(CELL(256, batch_input_shape=input_shape, input_shape=input_shape, return_sequences=True))
+    # class_model.add(Dropout(.2))
+    class_model.add(CELL(256))
+    # class_model.add(Dropout(.2))
+    # class_model.add(CELL(128))
+    # class_model.add(Dropout(.2))
+    # class_model.add(CELL(512, kernel_initializer=initializer,
+    #                      recurrent_initializer=initializer))
+
+    class_model.add(Dense(output_shape, activation="softmax"))
+    # rms = optimizers.RMSprop(lr=0.001, rho=0.9, epsilon=None, decay=0.0)
+    class_model.compile(loss="categorical_crossentropy", optimizer="adam")
     return class_model

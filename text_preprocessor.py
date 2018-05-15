@@ -66,8 +66,8 @@ class TextPreProcessor:
         vowel_hot = one_hot_encode(vowel_code, self.n_vowels)
         return class_hot, vowel_hot
 
-    def text_to_bin(self, filename, n_samples=-1):
-        if os.path.exists(filename):
+    def text_to_bin(self, c_filename, v_filename,  n_samples=-1):
+        if os.path.exists(c_filename):
             print("v1 file alread exists")
             return
         batch_size = self.batch_size
@@ -75,19 +75,24 @@ class TextPreProcessor:
         to_read = batch_size + seq_length
         tex_data_file = open(self.dataset_filename, mode='r', encoding='utf-8')
         prev_left = tex_data_file.read(seq_length)
-        data_file = h5py.File(filename, "a")
+        data_file_class = h5py.File(c_filename, "a")
+        data_file_vowel = h5py.File(v_filename, "a")
 
         chunk_size = 40 * seq_length * batch_size
-        train_X = data_file.create_dataset(
+        train_x_c = data_file_class.create_dataset(
             'train_x', (0, seq_length, 1),
             maxshape=(None, seq_length, 1),
             chunks=(chunk_size, seq_length, 1))
-        train_y = data_file.create_dataset(
+        train_x_v = data_file_vowel.create_dataset(
+            'train_x', (0, seq_length, 1),
+            maxshape=(None, seq_length, 1),
+            chunks=(chunk_size, seq_length, 1))
+        train_y_c = data_file_class.create_dataset(
             'train_y', (0, self.n_consonants),
             maxshape=(None,  self.n_consonants),
             chunks=(chunk_size,  self.n_consonants))
-        train_z = data_file.create_dataset(
-            'train_z', (0, self.n_vowels),
+        train_y_v = data_file_vowel.create_dataset(
+            'train_y', (0, self.n_vowels),
             maxshape=(None, self.n_vowels),
             chunks=(chunk_size, self.n_vowels))
 
@@ -112,14 +117,17 @@ class TextPreProcessor:
                 batch_z[b] = vowel_hot
 
             batch_x = batch_x / (self.n_consonants * 10)
-            train_X.resize(train_X.shape[0] + batch_size, axis=0)
-            train_X[-batch_size:] = batch_x
+            train_x_c.resize(train_x_c.shape[0] + batch_size, axis=0)
+            train_x_c[-batch_size:] = batch_x
 
-            train_y.resize(train_y.shape[0] + batch_size, axis=0)
-            train_y[-batch_size:] = batch_y
+            train_y_c.resize(train_y_c.shape[0] + batch_size, axis=0)
+            train_y_c[-batch_size:] = batch_y
 
-            train_z.resize(train_z.shape[0] + batch_size, axis=0)
-            train_z[-batch_size:] = batch_z
+            train_x_v.resize(train_x_v.shape[0] + batch_size, axis=0)
+            train_x_v[-batch_size:] = batch_x
+
+            train_y_v.resize(train_y_v.shape[0] + batch_size, axis=0)
+            train_y_v[-batch_size:] = batch_z
 
             n_rows += batch_x.shape[0]
             if n_rows % 10000 == 0:
@@ -130,7 +138,8 @@ class TextPreProcessor:
                 break
             if n_samples != -1 and n_rows >= n_samples:
                 break
-        data_file.close()
+        data_file_class.close()
+        data_file_vowel.close()
         tex_data_file.close()
         print('Total Rows Saved: {} Total Char: {}'.format(n_rows, n_chars))
 
@@ -145,11 +154,11 @@ class TextPreProcessor:
         prev_left = tex_data_file.read(seq_length)
         data_file = h5py.File(filename, "a")
         output_size = self.n_consonants * self.n_vowels
-        chunk_size = 40 * seq_length * batch_size
+        chunk_size = seq_length * batch_size
         train_X = data_file.create_dataset(
-            'train_x', (0, seq_length, 1),
-            maxshape=(None, seq_length, 1),
-            chunks=(chunk_size, seq_length, 1))
+            'train_x', (0, seq_length, output_size),
+            maxshape=(None, seq_length, output_size),
+            chunks=(chunk_size, seq_length, output_size))
         train_y = data_file.create_dataset(
             'train_y', (0, output_size),
             maxshape=(None,  output_size),
@@ -162,18 +171,21 @@ class TextPreProcessor:
             seq = prev_left + new_batch
             if len(new_batch) < batch_size:
                 break
-            batch_x = np.empty((batch_size, seq_length, 1))
+            batch_x = np.empty((batch_size, seq_length, output_size))
             batch_y = np.empty((batch_size, output_size))
             for b in range(batch_size):
                 text = seq[b:seq_length + b]
                 taregt = seq[seq_length + b]
                 num_encoded = self.encode_text_to_num(text)
-                batch_x[b] = num_encoded
+                hots = []
+                for num in num_encoded:
+                    hots.append(one_hot_encode(num, output_size))
+                hots = np.stack(hots)
+                batch_x[b] = hots
 
                 output = one_hot_encode(self.char2int[taregt], output_size)
                 batch_y[b] = output
 
-            batch_x = batch_x / output_size
             train_X.resize(train_X.shape[0] + batch_size, axis=0)
             train_X[-batch_size:] = batch_x
 
@@ -195,9 +207,11 @@ class TextPreProcessor:
 
 
 tp = TextPreProcessor(args.corpus_file, args.charset_file,
-                      args.batch_size, args.seq_length)  
+                      args.batch_size, args.seq_length)
 n_samples = args.n_batches * args.batch_size
+v_file = args.file + "_v.h5"
+c_file = args.file + "_c.h5"
 if args.data_version == 1:
-    tp.text_to_bin(args.file, n_samples=n_samples)
+    tp.text_to_bin(c_file, v_file, n_samples=n_samples)
 else:
     tp.text_to_bin_v2(args.file, n_samples=n_samples)

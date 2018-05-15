@@ -3,7 +3,7 @@ from check_point_manager import CheckpointManager
 import matplotlib.pyplot as plt
 
 checkpoint = CheckpointManager()
-s = "{0}_{1}".format("char_model", "batched")
+s = "{0}_{1}".format("class_model", "batched")
 checkpoint.prepare(s)
 def get_costs():
         rows = checkpoint.get_states()

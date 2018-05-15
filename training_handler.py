@@ -5,9 +5,74 @@ from keras.layers import LSTM
 from keras.layers import Input
 from keras.models import Model
 from keras.utils import np_utils
+from keras.callbacks import ModelCheckpoint
+import keras
 import os
 import time
 from check_point_manager import *
+import matplotlib.pyplot as plt
+import glob
+
+
+class TrainingLogger(keras.callbacks.Callback):
+
+    def __init__(self):
+        self.total_batches = 0
+        self.model_name = ""
+        self.total_epoches = 0
+        self.save_on = 0
+        self.batch_time_start = 0
+        self.current_epoch = 0
+        self.total_time_taken = 0
+        self.checkpoint = None
+        self.losses = []
+
+    def on_train_begin(self, logs={}):
+        self.model.batch = 10
+        try:
+            os.stat("model_weights/" + self.model_name)
+        except:
+            os.mkdir("model_weights/" + self.model_name)
+        return
+
+    def on_train_end(self, logs={}):
+        return
+
+    def on_epoch_begin(self, epoch, logs={}):
+        self.current_epoch += 1
+        return
+
+    def on_epoch_end(self, epoch, logs={}):
+        return
+
+    def on_batch_begin(self, batch, logs={}):
+        self.batch_time_start = time.time()
+        self.total_time_taken += self.batch_time_start
+        return
+
+    def on_batch_end(self, batch, logs={}):
+        time_taken = time.time() - self.batch_time_start
+        current_batch = logs.get('batch') + 1
+        if current_batch % self.save_on == 0:
+            remaining_time = time_taken * (self.total_batches - current_batch)
+            progress = (self.total_batches * (self.current_epoch - 1) +
+                        current_batch) * 100 / (self.total_batches * self.total_epoches)
+            cost = logs.get('loss')
+            self.losses.append(cost)
+            time_taken = self.pretty_time(time_taken)
+            remaining_time = self.pretty_time(remaining_time)
+            state = "Progress: {0:.3f}%, Epoch: {1}, Batch: {2}/{6}, Cost: {3:.5f}, Taken: {4}, Remaining: {5}".format(
+                progress, self.current_epoch, current_batch, cost, time_taken, remaining_time, self.total_batches)
+
+            self.checkpoint.save(state)
+            print(state)
+        return
+
+    def pretty_time(self, seconds):
+        mins, secs = divmod(seconds, 60)
+        hrs, mins = divmod(mins, 60)
+        days, hrs = divmod(hrs, 24)
+        return "{0}d, {1}h, {2}m, {3:.2f}s".format(days, hrs, mins, secs)
 
 
 class TrainingHandler:
@@ -28,76 +93,45 @@ class TrainingHandler:
         except:
             os.mkdir('model_weights')
 
-    def train(self, training_tag, n_iterations, save_on, save_model=False):
-        self.n_iterations = n_iterations
+    def train(self, training_tag, epoches, save_on, save_model=False):
         self.save_weights_on = save_on
         self.model_tag = training_tag
-        s = "{0}_{1}".format(self.model_name, self.model_tag)
-        self.checkpoint.prepare(s)
-        self.load_state()
-        elapsed_time = 0
-        start = time.time()
-        for i in range(self.current_iter, self.n_iterations):
-            x, y = self.data_generator.get_batch()
-            cost = self.model.train_on_batch(x, y)
-            if i % self.save_weights_on == 0:
-                end = time.time()
-                elapsed_time = end - start
-                self.current_iter = i
-                self.save_state(i, cost, elapsed_time)
-                start = time.time()
+        init_epoch = self.load_last_state()
 
-    def save_state(self, i, cost, elapsed_time):
+        gen = self.data_generator.generate_train_xy()
+        history = TrainingLogger()
+        history.total_epoches = epoches
+        history.save_on = save_on
+        history.total_batches = self.data_generator.total_batches
+        history.model_name = "{0}_{1}".format(self.model_name, training_tag)
+        history.checkpoint = self.checkpoint
+        history.checkpoint.prepare(history.model_name)
+        history.current_epoch = init_epoch
 
-        file_name = "model_weights/{0}-{1}.txt".format(
-            self.model_name, self.model_tag)
-        dirname = "{0}-{1}".format(self.model_name, self.model_tag)
-        try:
-            os.stat(file_name[:-4])
-        except:
-            os.mkdir(file_name[:-4])
-        progress = (i + self.save_weights_on) * 100 / self.n_iterations
-        self.time_taken += elapsed_time
-        r_iter = self.n_iterations - (i + 1)
-        r_time = (elapsed_time) * r_iter/self.save_weights_on
-        r_time = self.pretty_time(r_time)
-        taken = self.pretty_time(self.time_taken)
-        epoch = i//self.data_generator.total_batchs
-        progress = "Progress: {0:.3f}% Epoch: {1} Batch: {2}/{7} Cost: {3:.5f} Time: {4:.3f}s Taken: {5} Remaining: {6}".format(
-            progress, epoch, self.data_generator.current_batch, cost, elapsed_time, taken, r_time, self.data_generator.total_batchs)
-        print(progress)
+        
+        if init_epoch == epoches:
+            print("Training has ended ")
+            return
+        per_epoch = self.data_generator.total_batches
+        folder = "model_weights/{0}_{1}/".format(self.model_name, self.model_tag)
+        checkpoint_file = folder + "model_weight-{epoch:02d}-{loss:.4f}.hdf5"
+        checkpoint = ModelCheckpoint(checkpoint_file, monitor='loss', verbose=1)
+        self.model.fit_generator(gen, steps_per_epoch=per_epoch,
+                                 verbose=0, epochs=epoches, 
+                                 initial_epoch=init_epoch,
+                                 callbacks=[checkpoint, history],
+                                 shuffle=True)
 
-        now = time.strftime("%Y-%m-%d %H:%M:%S")
-
-        state = "{0},{1},{2},{3},{4},{5},{6},{7},{8}".format(self.n_iterations,
-                                                             self.current_iter,
-                                                             self.save_weights_on,
-                                                             self.latest_weight,
-                                                             cost,
-                                                             self.data_generator.current_batch,
-                                                             self.time_taken,
-                                                             now,
-                                                             progress)
-        self.latest_weight = "model_weights/{3}/{0}-{1}-{2:.5}.h5".format(
-            self.model_name, i, cost,  dirname)
-        self.model.save_weights(self.latest_weight)
-        self.checkpoint.save(state)
-
-    def load_state(self):
-        last_state = self.checkpoint.get_last_state()
-        if last_state != None:
-            print("Loading State: " + last_state[1])
-            vals = last_state[1].split(',')
-            self.n_iterations = int(vals[0])
-            self.current_iter = int(vals[1]) + 1
-            self.save_weights_on = int(vals[2])
-            self.latest_weight = vals[3]
-            self.model.load_weights(self.latest_weight)
-            self.data_generator.current_batch = int(vals[5]) + 1
-            self.time_taken = float(vals[6])
-    
-    
-            
+    def load_last_state(self):
+        folder = "model_weights/{0}_{1}/*.hdf5".format(self.model_name, self.model_tag)
+        list_of_files = glob.glob(folder) 
+        if len(list_of_files) == 0:
+            return 0
+        last_state = list(sorted(list_of_files))[-1]
+        print("Loading State: " + last_state)
+        self.model = keras.models.load_model(last_state)
+        epoch = int(last_state.split('-')[1])
+        return epoch
 
     def load_best_weight(self, tag):
         best_row, min_cost, iter = self.checkpoint.get_best_state()
