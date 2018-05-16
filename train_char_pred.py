@@ -5,28 +5,32 @@ import sys
 from util import *
 
 from data_generator import DataGen
+from data_gen2 import DataGen2
 from models import *
 from training_handler import TrainingHandler
 
 batch_size = 100
-epoches = 2
-file = "data/data_100_100_v.h5"
-tag_name = "first_train"
+batches = 100
+seuqnce_length = 100
+epoches = 10
+charset = "data/charset.txt"
+corpus = "data/small.txt"
+tag_name = "char_train"
 save_on_every = 10
 
+
 cwd = os.getcwd()
-h5_file_path = os.path.join(cwd, file)
-gen = DataGen(h5_file_path, batch_size)
+charset = os.path.join(cwd, charset)
+corpus = os.path.join(cwd, corpus)
+d = DataGen2(charset, batch_size, seuqnce_length)
+gen = d.generate_vowels_xy(corpus, batches=batches)
 
-x_dims, y_dims = gen.train_x.shape, gen.train_y.shape
-input_shape = (100, x_dims[1], x_dims[2])
+input_shape = (seuqnce_length, len(d.char2int))
 
-char_model = get_model(input_shape, y_dims[1], lstm_cell=False)
+char_model = get_model(input_shape, d.n_vowels, lstm_cell=False)
 
-gen.curren_batch = 0
 model_name = "char_model"
 save_model(char_model, model_name, tag_name)
-char_trainer = TrainingHandler(gen, char_model, model_name)
-char_trainer.train(tag_name, epoches, save_on_every, save_model=True)
-
-gen.close()
+trainer = TrainingHandler(char_model, model_name)
+trainer.train(tag_name, gen, epoches, batches,
+              save_on_every, save_model=True)

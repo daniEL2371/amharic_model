@@ -4,7 +4,7 @@ import os
 import h5py
 
 
-class DataGenerator:
+class DataGen2:
 
     def __init__(self, charset_file, batch_size, seuqnce_length):
         self.charset_file = charset_file
@@ -54,8 +54,8 @@ class DataGenerator:
         vowel_hot = one_hot_encode(vowel_code, self.n_vowels)
         return vowel_hot
 
-     def text_vec(self, text, target):
-            output_size = len(self.char2int)
+    def text_vec(self, text, target):
+        output_size = len(self.char2int)
         num_encoded = self.encode_text_to_num2(text)
         hots = []
         for num in num_encoded:
@@ -68,22 +68,22 @@ class DataGenerator:
     def nums_to_chars(self, nums):
         return [self.int2char[i] for i in nums]
     
-    def generate_consonants_xy(self, corpus):
+    def generate_consonants_xy(self, corpus, batches=-1):
         batch_size = self.batch_size
         seq_length = self.seuqnce_length
         to_read = batch_size + seq_length
         tex_data_file = open(corpus, mode='r', encoding='utf-8')
         prev_left = tex_data_file.read(seq_length)
-        output_size = len(self.char2int)
-        n_rows = 0
-        n_chars = len(prev_left)
+        input_size = len(self.char2int)
+        batch = 0
         while True:
             new_batch = tex_data_file.read(batch_size)
-            seq = prev_left + new_batch
-            if len(new_batch) < batch_size:
+            if len(new_batch) < batch_size or batch == batches:
                 tex_data_file.seek(0, 0)
+                batch = 0
                 continue
-            batch_x = np.empty((batch_size, seq_length, 1))
+            seq = prev_left + new_batch
+            batch_x = np.empty((batch_size, seq_length, input_size))
             batch_y = np.empty((batch_size, self.n_consonants))
             for b in range(batch_size):
                 text = seq[b:seq_length + b]
@@ -91,29 +91,31 @@ class DataGenerator:
                 num_encoded = self.encode_text_to_num(text)
                 hots = []
                 for num in num_encoded:
-                    hots.append(one_hot_encode(num, output_size))
+                    hots.append(one_hot_encode(num, input_size))
                 hots = np.stack(hots)
                 batch_x[b] = hots
                 class_hot = self.get_consonants(taregt)
                 batch_y[b] = class_hot
+            prev_left = seq[batch_size:seq_length + batch_size]
+            batch += 1
             yield batch_x, batch_y
     
-    def generate_vowels_xy(self, corpus):
+    def generate_vowels_xy(self, corpus, batches=-1):
         batch_size = self.batch_size
         seq_length = self.seuqnce_length
         to_read = batch_size + seq_length
         tex_data_file = open(corpus, mode='r', encoding='utf-8')
         prev_left = tex_data_file.read(seq_length)
-        output_size = len(self.char2int)
-        n_rows = 0
-        n_chars = len(prev_left)
+        input_size = len(self.char2int)
+        batch = 0
         while True:
             new_batch = tex_data_file.read(batch_size)
-            seq = prev_left + new_batch
-            if len(new_batch) < batch_size:
+            if len(new_batch) < batch_size or batch == batches:
                 tex_data_file.seek(0, 0)
+                batch = 0
                 continue
-            batch_x = np.empty((batch_size, seq_length, 1))
+            seq = prev_left + new_batch
+            batch_x = np.empty((batch_size, seq_length, input_size))
             batch_y = np.empty((batch_size, self.n_vowels))
             for b in range(batch_size):
                 text = seq[b:seq_length + b]
@@ -121,10 +123,11 @@ class DataGenerator:
                 num_encoded = self.encode_text_to_num(text)
                 hots = []
                 for num in num_encoded:
-                    hots.append(one_hot_encode(num, output_size))
+                    hots.append(one_hot_encode(num, input_size))
                 hots = np.stack(hots)
                 batch_x[b] = hots
-                vowels_hot = self.get_vowels(taregt)
-                batch_y[b] = vowels_hot
+                class_hot = self.get_vowels(taregt)
+                batch_y[b] = class_hot
+            prev_left = seq[batch_size:seq_length + batch_size]
+            batch += 1
             yield batch_x, batch_y
-            

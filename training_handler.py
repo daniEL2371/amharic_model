@@ -82,11 +82,10 @@ class TrainingLogger(keras.callbacks.Callback):
 
 class TrainingHandler:
 
-    def __init__(self, data_gen, model, model_name):
+    def __init__(self, model, model_name):
         self.n_iterations = 0
         self.current_iter = 0
         self.save_weights_on = 0
-        self.data_generator = data_gen
         self.model = model
         self.model_name = model_name
         self.latest_weight = None
@@ -98,16 +97,15 @@ class TrainingHandler:
         except:
             os.mkdir('model_weights')
 
-    def train(self, training_tag, epoches, save_on, save_model=False):
+    def train(self, training_tag, generator, epoches, batches, save_on, save_model=False):
         self.save_weights_on = save_on
         self.model_tag = training_tag
         init_epoch = self.load_last_state()
 
-        gen = self.data_generator.generate_train_xy()
         history = TrainingLogger()
         history.total_epoches = epoches
         history.save_on = save_on
-        history.total_batches = self.data_generator.total_batches
+        history.total_batches = batches
         history.model_name = "{0}_{1}".format(self.model_name, training_tag)
         history.checkpoint = self.checkpoint
         history.checkpoint.prepare(history.model_name)
@@ -116,13 +114,13 @@ class TrainingHandler:
         if init_epoch == epoches:
             print("Training has ended ")
             return
-        per_epoch = self.data_generator.total_batches
+        per_epoch = batches
         folder = "model_weights/{0}_{1}/".format(
             self.model_name, self.model_tag)
         checkpoint_file = folder + "model_weight-{epoch:02d}-{loss:.4f}.hdf5"
         checkpoint = ModelCheckpoint(
             checkpoint_file, monitor='loss', verbose=1)
-        self.model.fit_generator(gen, steps_per_epoch=per_epoch,
+        self.model.fit_generator(generator, steps_per_epoch=per_epoch,
                                  verbose=0, epochs=epoches,
                                  initial_epoch=init_epoch,
                                  callbacks=[checkpoint, history],
