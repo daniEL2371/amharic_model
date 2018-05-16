@@ -57,7 +57,7 @@ class TrainingLogger(keras.callbacks.Callback):
         current_batch = logs.get('batch') + 1
         if current_batch % self.save_on == 0:
             total_iter = self.total_batches * self.total_epoches
-            till_now = self.current_epoch * self.total_batches + batch
+            till_now = (self.current_epoch - 1) * self.total_batches + batch
             rem_iter = total_iter - till_now
             remaining_time = rem_iter * batch_time
             progress = (self.total_batches * (self.current_epoch - 1) +

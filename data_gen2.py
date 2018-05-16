@@ -15,6 +15,7 @@ class DataGen2:
         self.seuqnce_length = seuqnce_length
         self.n_consonants = 0
         self.n_vowels = 0
+        self.output_size = 0
         self.load_charset()
 
     def load_charset(self):
@@ -31,7 +32,7 @@ class DataGen2:
                 int2char[j] = row[i]
                 char2int[row[i]] = j
                 j += 1
-
+        
         self.int2char = int2char
         self.char2int = char2int
         self.char2tup = char2tup
@@ -74,7 +75,7 @@ class DataGen2:
         to_read = batch_size + seq_length
         tex_data_file = open(corpus, mode='r', encoding='utf-8')
         prev_left = tex_data_file.read(seq_length)
-        input_size = len(self.char2int)
+        input_size = len(self.char2int) + 1
         batch = 0
         while True:
             new_batch = tex_data_file.read(batch_size)
@@ -106,7 +107,7 @@ class DataGen2:
         to_read = batch_size + seq_length
         tex_data_file = open(corpus, mode='r', encoding='utf-8')
         prev_left = tex_data_file.read(seq_length)
-        input_size = len(self.char2int)
+        input_size = len(self.char2int) + 1
         batch = 0
         while True:
             new_batch = tex_data_file.read(batch_size)
@@ -128,6 +129,38 @@ class DataGen2:
                 batch_x[b] = hots
                 class_hot = self.get_vowels(taregt)
                 batch_y[b] = class_hot
+            prev_left = seq[batch_size:seq_length + batch_size]
+            batch += 1
+            yield batch_x, batch_y
+
+    def generate_xy(self, corpus, batches=-1):
+        batch_size = self.batch_size
+        seq_length = self.seuqnce_length
+        to_read = batch_size + seq_length
+        tex_data_file = open(corpus, mode='r', encoding='utf-8')
+        prev_left = tex_data_file.read(seq_length)
+        input_size = len(self.char2int) + 1
+        batch = 0
+        while True:
+            new_batch = tex_data_file.read(batch_size)
+            if len(new_batch) < batch_size or batch == batches:
+                tex_data_file.seek(0, 0)
+                batch = 0
+                continue
+            seq = prev_left + new_batch
+            batch_x = np.empty((batch_size, seq_length, input_size))
+            batch_y = np.empty((batch_size, input_size))
+            for b in range(batch_size):
+                text = seq[b:seq_length + b]
+                taregt = seq[seq_length + b]
+                num_encoded = self.encode_text_to_num(text)
+                hots = []
+                for num in num_encoded:
+                    hots.append(one_hot_encode(num, input_size))
+                hots = np.stack(hots)
+                batch_x[b] = hots
+                output = one_hot_encode(self.char2int[taregt], input_size)
+                batch_y[b] = output
             prev_left = seq[batch_size:seq_length + batch_size]
             batch += 1
             yield batch_x, batch_y
