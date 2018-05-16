@@ -66,8 +66,8 @@ class TrainingLogger(keras.callbacks.Callback):
             self.losses.append(cost)
             time_taken = self.pretty_time(time_taken)
             remaining_time = self.pretty_time(remaining_time)
-            state = "Progress: {0:.3f}%, Epoch: {1}, Batch: {2}/{6}, Cost: {3:.5f}, Taken: {4}, Remaining: {5}".format(
-                progress, self.current_epoch, current_batch, cost, time_taken, remaining_time, self.total_batches)
+            state = "Progress: {0:.3f}%, Epoch: {1}/{7}, Batch: {2}/{6}, Cost: {3:.5f}, Taken: {4}, Remaining: {5}".format(
+                progress, self.current_epoch, current_batch, cost, time_taken, remaining_time, self.total_batches, self.total_epoches)
 
             self.checkpoint.save(state)
             print(state)
