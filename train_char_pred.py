@@ -25,9 +25,9 @@ corpus = os.path.join(cwd, corpus)
 d = DataGen2(charset, batch_size, seuqnce_length)
 gen = d.generate_vowels_xy(corpus, batches=batches)
 
-input_shape = (seuqnce_length, len(d.char2int))
+input_shape = (seuqnce_length, len(d.char2int) + 1)
 
-char_model = get_model(input_shape, d.n_vowels, lstm_cell=False)
+char_model = get_model(input_shape, d.n_vowels, lstm_cell=True)
 
 model_name = "char_model"
 save_model(char_model, model_name, tag_name)

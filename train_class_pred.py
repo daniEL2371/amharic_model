@@ -12,9 +12,9 @@ from training_handler import TrainingHandler
 batch_size = 100
 batches = 100
 seuqnce_length = 100
-epoches = 10
+epoches = 50
 charset = "data/charset.txt"
-corpus = "data/small.txt"
+corpus = "data/big.txt"
 tag_name = "class_train"
 save_on_every = 10
 
@@ -25,9 +25,9 @@ corpus = os.path.join(cwd, corpus)
 d = DataGen2(charset, batch_size, seuqnce_length)
 gen = d.generate_consonants_xy(corpus, batches=batches)
 
-input_shape = (seuqnce_length, len(d.char2int))
+input_shape = (seuqnce_length, len(d.char2int) + 1)
 
-class_model = get_model(input_shape, d.n_consonants, lstm_cell=False)
+class_model = get_model(input_shape, d.n_consonants, lstm_cell=True)
 
 model_name = "class_model"
 save_model(class_model, model_name, tag_name)
