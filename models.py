@@ -32,7 +32,7 @@ def initializer(shape):
     return tf.random_uniform(shape, minval=-0.08, maxval=0.08)
 
 
-def get_model(input_shape, output_shape, lstm_cell=True, decay=0.002):
+def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
     if lstm_cell:
         CELL = LSTM
     else:
@@ -42,7 +42,7 @@ def get_model(input_shape, output_shape, lstm_cell=True, decay=0.002):
     class_model.add(Dropout(.5))
     class_model.add(CELL(256, return_sequences=False))
     class_model.add(Dense(output_shape, activation="softmax"))
-    adam = keras.optimizers.Adam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
+    adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
     class_model.compile(loss="categorical_crossentropy", optimizer=adam)
     return class_model
 
