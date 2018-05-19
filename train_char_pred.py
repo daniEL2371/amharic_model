@@ -12,9 +12,9 @@ from training_handler import TrainingHandler
 batch_size = 100
 batches = 100
 seuqnce_length = 100
-epoches = 10
+epoches = 50
 charset = "data/charset.txt"
-corpus = "data/small.txt"
+corpus = "data/big.txt"
 tag_name = "char_train"
 save_on_every = 10
 

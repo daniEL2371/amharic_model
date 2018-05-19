@@ -51,7 +51,7 @@ class TextPreProcessor:
         return class_hot, vowel_hot
 
     def text_vec(self, text, target):
-        output_size = len(self.char2int)
+        output_size = len(self.char2int) + 1
         num_encoded = self.encode_text_to_num(text)
         hots = []
         for num in num_encoded:

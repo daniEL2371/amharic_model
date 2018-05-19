@@ -15,7 +15,7 @@ seuqnce_length = 100
 epoches = 50
 charset = "data/charset.txt"
 corpus = "data/big.txt"
-tag_name = "whole_train2"
+tag_name = "whole_train_256_2"
 save_on_every = 10
 
 
@@ -27,7 +27,7 @@ gen = d.generate_xy(corpus, batches=batches)
 
 input_shape = (seuqnce_length, len(d.char2int) + 1)
 
-class_model = get_model(input_shape, len(d.char2int) + 1, lstm_cell=False)
+class_model = get_model(input_shape, len(d.char2int) + 1, lstm_cell=True)
 
 model_name = "whole_model"
 save_model(class_model, model_name, tag_name)

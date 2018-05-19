@@ -1,0 +1,1 @@
+@reboot ps aux | grep 'train_generator.py' | grep -v grep || /home/itsc/train.sh

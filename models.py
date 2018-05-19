@@ -32,16 +32,20 @@ def initializer(shape):
     return tf.random_uniform(shape, minval=-0.08, maxval=0.08)
 
 
-def get_model(input_shape, output_shape, lstm_cell=True):
+def get_model(input_shape, output_shape, lstm_cell=True, decay=0.002):
     if lstm_cell:
         CELL = LSTM
     else:
         CELL = GRU
     class_model = Sequential()
-    class_model.add(CELL(128, input_shape=input_shape, return_sequences=True))
-    class_model.add(CELL(128))
+    class_model.add(CELL(256, input_shape=input_shape, return_sequences=True))
+    class_model.add(Dropout(.5))
+    class_model.add(CELL(256, return_sequences=False))
+    # class_model.add(Dropout(.5))
+    # class_model.add(CELL(256))
     class_model.add(Dense(output_shape, activation="softmax"))
-    class_model.compile(loss="categorical_crossentropy", optimizer="adam")
+    adam = keras.optimizers.Adam(lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
+    class_model.compile(loss="categorical_crossentropy", optimizer=adam)
     return class_model
 
 
@@ -65,4 +69,5 @@ def load_best_state(model_name, model_tag):
     best_state = states[k]
     print("Loading State: " + best_state)
     model = keras.models.load_model(best_state)
+    print(model)
     return model
