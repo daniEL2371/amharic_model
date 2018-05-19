@@ -10,7 +10,7 @@ from models import *
 from training_handler import TrainingHandler
 
 batch_size = 100
-batches = 100
+batches = 10000
 seuqnce_length = 100
 epoches = 50
 charset = "data/charset.txt"
