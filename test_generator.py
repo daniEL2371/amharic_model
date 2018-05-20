@@ -6,12 +6,14 @@ from models import *
 from training_handler import TrainingHandler
 from util import *
 from text_preprocessor import TextPreProcessor
+import keras
 
 batch_size = 100
 seq_length = 100
 tp = TextPreProcessor("data/charset.txt", 100, 100)
 
-model = load_best_state("whole_model", "whole_train_256_3")
+model = load_best_state("whole_model", "whole_train_256_2")
+print(model.summary())
 text = open('data/test.txt', encoding='utf-8').read()
 seed = text[0:0+seq_length]
 for i in range(len(text) - seq_length - 1):

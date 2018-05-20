@@ -16,6 +16,13 @@ def one_hot_encode(val, length):
     a[val] = 1
     return a
 
+def one_hot_encode2(vals, length):
+    mat = np.zeros((len(vals), length))
+    a = range(len(vals))
+    mat[a, vals] = 1
+    return mat
+
+
 def highpriority():
     """ Set the priority of the process to below-normal."""
 

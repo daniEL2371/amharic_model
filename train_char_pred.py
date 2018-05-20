@@ -10,12 +10,12 @@ from models import *
 from training_handler import TrainingHandler
 
 batch_size = 100
-batches = 10000
+batches = 100
 seuqnce_length = 100
 epoches = 50
 charset = "data/charset.txt"
 corpus = "data/big.txt"
-tag_name = "char_train"
+tag_name = "char_train_128"
 save_on_every = 10
 
 

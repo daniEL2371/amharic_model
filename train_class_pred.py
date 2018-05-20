@@ -10,7 +10,7 @@ from models import *
 from training_handler import TrainingHandler
 
 batch_size = 100
-batches = 10000
+batches = 100
 seuqnce_length = 100
 epoches = 50
 charset = "data/charset.txt"
@@ -28,7 +28,7 @@ gen = d.generate_consonants_xy(corpus, batches=batches)
 input_shape = (seuqnce_length, len(d.char2int) + 1)
 
 class_model = get_model(input_shape, d.n_consonants, lstm_cell=True)
-
+# print(class_model.summary())
 model_name = "class_model"
 save_model(class_model, model_name, tag_name)
 trainer = TrainingHandler(class_model, model_name)

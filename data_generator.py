@@ -21,6 +21,19 @@ class DataGen:
             if self.current_batch == self.total_batches:
                 self.current_batch = 0
             yield x_batch, y_batch
+        
+    def generate_multi(self, n_vowels, n_cons):
+        while True:
+            current = self.current_batch * self.batch_size
+            upto = current + self.batch_size
+            x_batch = self.train_x[current: upto]
+            y_batch = self.train_y[current: upto]
+            y1 = y_batch[:, :n_cons]
+            y2 = y_batch[:, n_cons:]
+            self.current_batch += 1
+            if self.current_batch == self.total_batches:
+                self.current_batch = 0
+            yield x_batch, [y1, y2]
 
     def close(self):
         self.dataset.close()

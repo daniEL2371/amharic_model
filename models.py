@@ -31,6 +31,22 @@ def load_model(model_name):
 def initializer(shape):
     return tf.random_uniform(shape, minval=-0.08, maxval=0.08)
 
+def multi_task(input_shape, output_shapes, lstm=False, decay=0.00002):
+    if lstm:
+        CELL = LSTM
+    else:
+        CELL = GRU
+    x = Input(shape=input_shape)
+    z = CELL(256, return_sequences=True)(x)
+    z = CELL(256)(z)
+    print(output_shapes)
+    y_vowel = Dense(output_shapes[1], activation="softmax")(z)
+    y_cons = Dense(output_shapes[0], activation="softmax")(z)
+    model = Model(inputs=x, output=[y_cons, y_vowel])
+    adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
+    model.compile(loss="categorical_crossentropy", optimizer=adam)
+    return model
+    
 
 def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
     if lstm_cell:
@@ -67,5 +83,4 @@ def load_best_state(model_name, model_tag):
     best_state = states[k]
     print("Loading State: " + best_state)
     model = keras.models.load_model(best_state)
-    print(model)
     return model
