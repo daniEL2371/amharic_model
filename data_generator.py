@@ -1,39 +1,45 @@
 import h5py
+import numpy as np
 
 
 class DataGen:
 
-    def __init__(self, file_name, batch_size, max_batches=-1):
-        self.dataset = h5py.File(file_name, "r")
-        self.batch_size = batch_size
-        self.train_x = self.dataset["train_x"]
-        self.train_y = self.dataset["train_y"]
-        self.current_batch = 0
-        self.total_batches = self.train_x.shape[0] // self.batch_size
+    
 
-    def generate_train_xy(self):
+    def generate_multi(self, file, n_vowels, n_cons, batch_size=100, seq_length=100, batches=-1):
+        output_size = n_cons + n_vowels
+        file = h5py.File(file, "r")
+        X = file["train_x"]
+        total_samples = X.shape[0]
+        print(X.shape)
+        print(total_samples)
+        total_read = 0
+        current = 0
+        batch = 0
         while True:
-            current = self.current_batch * self.batch_size
-            upto = current + self.batch_size
-            x_batch = self.train_x[current: upto]
-            y_batch = self.train_y[current: upto]
-            self.current_batch += 1
-            if self.current_batch == self.total_batches:
-                self.current_batch = 0
-            yield x_batch, y_batch
-        
-    def generate_multi(self, n_vowels, n_cons):
-        while True:
-            current = self.current_batch * self.batch_size
-            upto = current + self.batch_size
-            x_batch = self.train_x[current: upto]
-            y_batch = self.train_y[current: upto]
-            y1 = y_batch[:, :n_cons]
-            y2 = y_batch[:, n_cons:]
-            self.current_batch += 1
-            if self.current_batch == self.total_batches:
-                self.current_batch = 0
-            yield x_batch, [y1, y2]
+            batch_x = np.empty((batch_size, seq_length, output_size))
+            batch_y = np.empty((batch_size, output_size))
+            if total_samples - total_read < batch_size or batch == batches:
+                batch = 0
+            
+            for b in range(batch_size):
+                current = current + b
+                upto = current + seq_length
+                batch_x[b] = X[current:upto]
+                batch_y[b] = X[upto]
+
+            batch += 1
+            print("batch ", current)
+            total_read = total_read + batch_size
+            yield batch_x, batch_y
 
     def close(self):
         self.dataset.close()
+
+
+# d = DataGen()
+# gen = d.generate_multi('data/test.h5', 10, 46,
+#                        batch_size=2, seq_length=4, batches=3)
+# for i in range(6):
+#     x, y = next(gen)
+#     print(x)

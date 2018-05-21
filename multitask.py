@@ -24,7 +24,7 @@ corpus = os.path.join(cwd, corpus)
 d = DataGen2(charset, batch_size, seuqnce_length)
 gen = d.generate_multi(corpus, batches=batches)
 
-input_shape = (seuqnce_length, len(d.char2int) + 1)
+input_shape = (seuqnce_length, (d.n_consonants+ d.n_vowels))
 output_shapes = [d.n_consonants, d.n_vowels]
 
 model = multi_task(input_shape, output_shapes, lstm=True)
