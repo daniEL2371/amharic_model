@@ -125,6 +125,7 @@ class TrainingHandler:
                                  initial_epoch=init_epoch,
                                  callbacks=[checkpoint, history],
                                  shuffle=True)
+                                 
 
     def load_last_state(self):
         folder = "model_weights/{0}_{1}/*.hdf5".format(

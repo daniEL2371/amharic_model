@@ -6,13 +6,12 @@ import h5py
 
 class TextPreProcessor:
 
-    def __init__(self, charset_file, batch_size, seuqnce_length):
+    def __init__(self, charset_file):
         self.charset_file = charset_file
         self.char2int = {}
         self.int2char = {}
         self.char2tup = {}
-        self.batch_size = batch_size
-        self.seuqnce_length = seuqnce_length
+        self.tup2char = {}
         self.n_consonants = 0
         self.n_vowels = 0
         self.load_charset()
@@ -22,6 +21,7 @@ class TextPreProcessor:
         char2int = {}
         int2char = {}
         char2tup = {}
+        tup2char = {}
         data[-2] = data[-2] + '\n'
         j = 0
         for k in range(len(data)):
@@ -30,182 +30,100 @@ class TextPreProcessor:
                 char2tup[row[i]] = (k, i)
                 int2char[j] = row[i]
                 char2int[row[i]] = j
+                tup = "{0}-{1}".format(k, i)
+                tup2char[tup] = row[i]
                 j += 1
 
         self.int2char = int2char
+        self.tup2char = tup2char
         self.char2int = char2int
         self.char2tup = char2tup
         self.n_consonants = len(data)
         self.n_vowels = 10
 
-    
-    def encode_text_to_num(self, text):
-        encoded = [self.char2int[c] for c in text]
-        encoded = np.array(encoded).reshape((len(encoded), 1))
-        return encoded
-
     def encode_char(self, char):
         class_code, vowel_code = self.char2tup[char]
-        class_hot = one_hot_encode(class_code, self.n_consonants)
-        vowel_hot = one_hot_encode(vowel_code, self.n_vowels)
-        return class_hot, vowel_hot
+        length = self.n_consonants + self.n_vowels
+        x = np.zeros((length,))
+        x[class_code] = 1
+        x[self.n_consonants + vowel_code] = 1
+        return x
 
-    def text_vec(self, text, target):
-        output_size = len(self.char2int) + 1
-        num_encoded = self.encode_text_to_num(text)
-        hots = []
-        for num in num_encoded:
-            hots.append(one_hot_encode(num, output_size))
-        hots = np.stack(hots)
-        output = one_hot_encode(self.char2int[target], output_size)
-
-        return hots, output
-    
-    def nums_to_chars(self, nums):
-        return [self.int2char[i] for i in nums]
-
-    def text_to_bin(self, corpus, c_filename, v_filename,  n_samples=-1):
-        if os.path.exists(c_filename):
+    def text_to_bin(self, corpus, filename, batch_size, batches=-1):
+        if os.path.exists(filename):
             print("v1 file alread exists")
             return
-        batch_size = self.batch_size
-        seq_length = self.seuqnce_length
-        to_read = batch_size + seq_length
+        input_size = self.n_consonants + self.n_vowels
+        output_size = self.n_consonants + self.n_vowels
+        chunk_size = input_size * 1024
+
         tex_data_file = open(corpus, mode='r', encoding='utf-8')
-        prev_left = tex_data_file.read(seq_length)
-        data_file_class = h5py.File(c_filename, "a")
-        data_file_vowel = h5py.File(v_filename, "a")
-        output_size = len(self.char2int)
-        chunk_size = 40 * seq_length * batch_size
-        train_x_c = data_file_class.create_dataset(
-            'train_x', (0, seq_length, 1),
-            maxshape=(None, seq_length, 1),
-            chunks=(chunk_size, seq_length, 1))
-        train_x_v = data_file_vowel.create_dataset(
-            'train_x', (0, seq_length, 1),
-            maxshape=(None, seq_length, 1),
-            chunks=(chunk_size, seq_length, 1))
-        train_y_c = data_file_class.create_dataset(
-            'train_y', (0, self.n_consonants),
-            maxshape=(None,  self.n_consonants),
-            chunks=(chunk_size,  self.n_consonants))
-        train_y_v = data_file_vowel.create_dataset(
-            'train_y', (0, self.n_vowels),
-            maxshape=(None, self.n_vowels),
-            chunks=(chunk_size, self.n_vowels))
-
-        n_rows = 0
-        n_chars = len(prev_left)
-        while True:
-            new_batch = tex_data_file.read(batch_size)
-            seq = prev_left + new_batch
-            if len(new_batch) < batch_size:
-                break
-            batch_x = np.empty((batch_size, seq_length, 1))
-            batch_y = np.empty((batch_size, self.n_consonants))
-            batch_z = np.empty((batch_size, self.n_vowels))
-            for b in range(batch_size):
-                text = seq[b:seq_length + b]
-                taregt = seq[seq_length + b]
-                num_encoded = self.encode_text_to_num2(text)
-                hots = []
-                for num in num_encoded:
-                    hots.append(one_hot_encode(num, output_size))
-                hots = np.stack(hots)
-                batch_x[b] = hots
-
-                class_hot, vowel_hot = self.encode_char(taregt)
-                batch_y[b] = class_hot
-                batch_z[b] = vowel_hot
-
-            train_x_c.resize(train_x_c.shape[0] + batch_size, axis=0)
-            train_x_c[-batch_size:] = batch_x
-
-            train_y_c.resize(train_y_c.shape[0] + batch_size, axis=0)
-            train_y_c[-batch_size:] = batch_y
-
-            train_x_v.resize(train_x_v.shape[0] + batch_size, axis=0)
-            train_x_v[-batch_size:] = batch_x
-
-            train_y_v.resize(train_y_v.shape[0] + batch_size, axis=0)
-            train_y_v[-batch_size:] = batch_z
-
-            n_rows += batch_x.shape[0]
-            if n_rows % 10000 == 0:
-                print("{0:.4}%".format(n_rows * 100 / 15000000))
-            n_chars += batch_size
-            prev_left = seq[batch_size:seq_length + batch_size]
-            if batch_size < batch_size:
-                break
-            if n_samples != -1 and n_rows >= n_samples:
-                break
-        data_file_class.close()
-        data_file_vowel.close()
-        tex_data_file.close()
-        print('Total Rows Saved: {} Total Char: {}'.format(n_rows, n_chars))
-
-    def text_to_bin_v2(self, corpus, filename, n_samples=-1):
-        if os.path.exists(filename):
-            print("v2 file alread exists")
-            return
-        batch_size = self.batch_size
-        seq_length = self.seuqnce_length
-        to_read = batch_size + seq_length
-        tex_data_file = open(corpus, mode='r', encoding='utf-8')
-        prev_left = tex_data_file.read(seq_length)
         data_file = h5py.File(filename, "a")
-        output_size = len(self.char2int)
-        chunk_size = seq_length * batch_size
-        train_X = data_file.create_dataset(
-            'train_x', (0, seq_length, output_size),
-            maxshape=(None, seq_length, output_size),
-            chunks=(chunk_size, seq_length, output_size))
-        train_y = data_file.create_dataset(
-            'train_y', (0, output_size),
-            maxshape=(None,  output_size),
-            chunks=(chunk_size,  output_size))
 
-        n_rows = 0
-        n_chars = len(prev_left)
+        train_x = data_file.create_dataset('train_x', (0, input_size),
+                                           maxshape=(None, input_size),
+                                           chunks=(chunk_size, input_size))
+        batch = 0
         while True:
-            new_batch = tex_data_file.read(batch_size)
-            seq = prev_left + new_batch
-            if len(new_batch) < batch_size:
+            seq = tex_data_file.read(batch_size)
+            if len(seq) == 0:
                 break
-            batch_x = np.empty((batch_size, seq_length, output_size))
-            batch_y = np.empty((batch_size, output_size))
-            for b in range(batch_size):
-                text = seq[b:seq_length + b]
-                taregt = seq[seq_length + b]
-                num_encoded = self.encode_text_to_num(text)
-                hots = []
-                for num in num_encoded:
-                    hots.append(one_hot_encode(num, output_size))
-                hots = np.stack(hots)
-                batch_x[b] = hots
+            for b in range(len(seq)):
+                c = seq[b]
+                x = self.encode_char(c)
+                train_x.resize(train_x.shape[0] + 1, axis=0)
+                train_x[-1:] = x
 
-                output = one_hot_encode(self.char2int[taregt], output_size)
-                batch_y[b] = output
-
-            train_X.resize(train_X.shape[0] + batch_size, axis=0)
-            train_X[-batch_size:] = batch_x
-
-            train_y.resize(train_y.shape[0] + batch_size, axis=0)
-            train_y[-batch_size:] = batch_y
-
-            n_rows += batch_x.shape[0]
-            if n_rows % 10000 == 0:
-                print("{0:.4}%".format(n_rows * 100 / 15000000))
-            n_chars += batch_size
-            prev_left = seq[batch_size:seq_length + batch_size]
-            if batch_size < batch_size:
-                break
-            if n_samples != -1 and n_rows >= n_samples:
-                break
         data_file.close()
         tex_data_file.close()
-        print('Total Rows Saved: {} Total Char: {}'.format(n_rows, n_chars))
 
-   
+    def vec_to_char(self, vec):
+        ic = np.argmax(vec[:self.n_consonants])
+        iv = np.argmax(vec[self.n_consonants:])
+        key = "{0}-{1}".format(ic, iv)
+        c = self.tup2char[key]
+        return c
+
+    def generate_multi(self, file, batch_size=100, seq_length=100, batches=-1):
+        n_vowels, n_cons = self.n_vowels, self.n_consonants
+        output_size = n_cons + n_vowels
+        file = h5py.File(file, "r")
+        X = file["train_x"]
+        total_samples = X.shape[0]
+        total_read = 0
+        current = 0
+        batch = 0
+        while True:
+            batch_x = np.empty((batch_size, seq_length, output_size))
+            batch_y = np.empty((batch_size, output_size))
+            if total_samples - total_read < batch_size or batch == batches:
+                batch = 0
+
+            for b in range(batch_size):
+                current = batch + b
+                upto = current + seq_length
+                batch_x[b] = X[current:upto]
+                batch_y[b] = X[upto]
+
+            batch += 1
+            total_read = total_read + batch_size
+            batch_y_c = batch_y[:, :n_cons]
+            batch_y_v = batch_y[:, n_cons:]
+            yield batch_x, [batch_y_c, batch_y_v]
 
 
+# tp = TextPreProcessor('data/charset.txt')
+# tp.text_to_bin('data/test.txt', 'data/test.h5', 5, 100)
+# gen = tp.generate_multi('data/test.h5', 10, 46,
+#                         batch_size=6, seq_length=8, batches=4)
+# for i in range(6):
+#     x, y = next(gen)
+#     for d in range(len(x)):
+#         k, o = x[d], [y[0][d], y[1][d]]
+#         seq = []
+#         _i, _j = o
+#         for g in k:
+#             c = tp.vec_to_char(g)
+#             seq.append(c)
+#         mm = np.hstack((_i, _j))
+        # print(seq, " ---> ", tp.vec_to_char(mm))
