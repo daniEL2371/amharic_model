@@ -97,7 +97,7 @@ class TrainingHandler:
         except:
             os.mkdir('model_weights')
 
-    def train(self, training_tag, generator, epoches, batches, save_on, save_model=False):
+    def train(self, training_tag, generator, epoches, batches, save_on, validation_gen=None, save_model=False):
         self.save_weights_on = save_on
         self.model_tag = training_tag
         init_epoch = self.load_last_state()

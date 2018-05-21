@@ -14,7 +14,7 @@ d = DataGen2("data/charset.txt", 100, 100)
 
 model = load_best_state("multi_model", "2_256")
 model.summary()
-text = open('data/small.txt', encoding='utf-8').read()[:500]
+text = open('data/validate.txt', encoding='utf-8').read()[:200]
 seed = text[0:0 + seq_length]
 print(seed)
 gen = []

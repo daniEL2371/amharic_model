@@ -44,7 +44,7 @@ def multi_task(input_shape, output_shapes, lstm=False, decay=0.00002):
     y_cons = Dense(output_shapes[0], activation="softmax")(z)
     model = Model(inputs=x, output=[y_cons, y_vowel])
     adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
-    model.compile(loss="categorical_crossentropy", optimizer=adam)
+    model.compile(loss="categorical_crossentropy", optimizer=adam, metrics=['accuracy'])
     return model
     
 
