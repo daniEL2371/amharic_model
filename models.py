@@ -31,6 +31,7 @@ def load_model(model_name):
 def initializer(shape):
     return tf.random_uniform(shape, minval=-0.08, maxval=0.08)
 
+
 def multi_task(input_shape, output_shapes, lstm=False, decay=0.00002):
     if lstm:
         CELL = LSTM
@@ -40,13 +41,17 @@ def multi_task(input_shape, output_shapes, lstm=False, decay=0.00002):
     z = CELL(256, return_sequences=True)(x)
     z = CELL(256)(z)
     print(output_shapes)
-    y_vowel = Dense(output_shapes[1], activation="softmax")(z)
-    y_cons = Dense(output_shapes[0], activation="softmax")(z)
+    y_vowel = Dense(output_shapes[1],
+                    activation="softmax", name="vowel_output")(z)
+    y_cons = Dense(output_shapes[0],
+                   activation="softmax", name="cons_output")(z)
     model = Model(inputs=x, output=[y_cons, y_vowel])
-    adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
-    model.compile(loss="categorical_crossentropy", optimizer=adam)
+    adam = keras.optimizers.Adam(
+        lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
+    model.compile(loss="categorical_crossentropy",
+                  optimizer=adam, metrics=['acc'])
     return model
-    
+
 
 def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
     if lstm_cell:
@@ -58,7 +63,8 @@ def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
     class_model.add(Dropout(.5))
     class_model.add(CELL(256, return_sequences=False))
     class_model.add(Dense(output_shape, activation="softmax"))
-    adam = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
+    adam = keras.optimizers.Adam(
+        lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
     class_model.compile(loss="categorical_crossentropy", optimizer=adam)
     return class_model
 
@@ -66,13 +72,23 @@ def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
 def load_model(model_name, model_tag):
     json = "{0}-{1}.json".format(model_name, model_tag)
 
+def get_epoch(state):
+    epoch = int(state.split('-')[1])
+    return epoch
+
+def get_model_wights(model_name, model_tag):
+    folder = "model_weights/{0}_{1}/*.hdf5".format(model_name, model_tag)
+    list_of_files = glob.glob(folder)
+    list_of_files.sort(key=get_epoch)
+    return list_of_files
 
 def load_best_state(model_name, model_tag):
     folder = "model_weights/{0}_{1}/*.hdf5".format(model_name, model_tag)
     list_of_files = glob.glob(folder)
+    list_of_files.sort(key=get_epoch)
     if len(list_of_files) == 0:
         return 0
-    states = list(sorted(list_of_files))
+    states = list_of_files
     min_cost = 999
     k = 0
     for i, state in enumerate(states):

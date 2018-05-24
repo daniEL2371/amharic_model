@@ -7,6 +7,7 @@ def parse_training_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('-m', '--model_name', dest='name', type=str)
     parser.add_argument('-t' '--model_tag', dest='tag', type=str)
+    parser.add_argument('-s' '--samples', dest='n_samples', type=int, default=-1)
     args = parser.parse_args()
     return args
 
@@ -22,9 +23,13 @@ def get_costs():
             vals = row[1].split(',')
             cost = float(vals[3].split(': ')[1])
             costs.append(cost)
-        return costs
+        return np.array(costs)
 
 costs = get_costs()
+s = int(len(costs)/args.n_samples)
+if args.n_samples != -1:
+    indexes = np.arange(0, len(costs), s)
+    costs = costs[indexes]
 print(len(costs))
 plt.plot(range(len(costs)), costs)
 plt.show()
