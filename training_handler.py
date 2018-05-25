@@ -22,6 +22,7 @@ class TrainingLogger(keras.callbacks.Callback):
         self.total_epoches = 0
         self.save_on = 0
         self.batch_time_start = 0
+        self.epoch_start_time = 0
         self.current_epoch = 0
         self.total_time_taken = 0
         self.checkpoint = None
@@ -42,9 +43,19 @@ class TrainingLogger(keras.callbacks.Callback):
 
     def on_epoch_begin(self, epoch, logs={}):
         self.current_epoch += 1
+        self.epoch_start_time = time.time()
         return
 
     def on_epoch_end(self, epoch, logs={}):
+        s = '{0}:{1}/{2},'.format("epoch", epoch, self.total_epoches)
+        elapsed = time.time() - self.epoch_start_time
+        s += "{0}:{1},".format("elapsed", elapsed)
+        for key in logs:
+            val = logs[key]
+            info = "{0}:{1},".format(key, val)
+            s += info
+        
+        self.checkpoint.save(s)
         return
 
     def on_batch_begin(self, batch, logs={}):
@@ -63,14 +74,11 @@ class TrainingLogger(keras.callbacks.Callback):
             progress = (self.total_batches * (self.current_epoch - 1) +
                         current_batch) * 100 / (self.total_batches * self.total_epoches)
             cost = logs.get('loss')
-            self.losses.append(cost)
             time_taken = self.pretty_time(time_taken)
             remaining_time = self.pretty_time(remaining_time)
-            state = "Progress: {0:.3f}%, Epoch: {1}/{7}, Batch: {2}/{6}, Cost: {3:.5f}, Taken: {4}, Remaining: {5}".format(
+            progress = "Progress: {0:.3f}%, Epoch: {1}/{7}, Batch: {2}/{6}, Loss: {3:.5f}, Taken: {4}, Remaining: {5}\n".format(
                 progress, self.current_epoch, current_batch, cost, time_taken, remaining_time, self.total_batches, self.total_epoches)
-
-            self.checkpoint.save(state)
-            print(state)
+            print(progress)
         return
 
     def pretty_time(self, seconds):
@@ -97,7 +105,7 @@ class TrainingHandler:
         except:
             os.mkdir('model_weights')
 
-    def train(self, training_tag, generator, epoches, batches, save_on, save_model=False):
+    def train(self, training_tag, generator, epoches, batches, save_on, save_model=False, val_gen=None, val_batches=None):
         self.save_weights_on = save_on
         self.model_tag = training_tag
         init_epoch = self.load_last_state()
@@ -118,14 +126,15 @@ class TrainingHandler:
         folder = "model_weights/{0}_{1}/".format(
             self.model_name, self.model_tag)
         checkpoint_file = folder + "model_weight-{epoch:02d}-{loss:.4f}.hdf5"
-        checkpoint = ModelCheckpoint(
-            checkpoint_file, monitor='loss', verbose=1)
+        checkpoint = ModelCheckpoint(checkpoint_file, monitor='loss', verbose=0)
         self.model.fit_generator(generator, steps_per_epoch=per_epoch,
                                  verbose=0, epochs=epoches,
                                  initial_epoch=init_epoch,
                                  callbacks=[checkpoint, history],
-                                 shuffle=True)
-                                 
+                                 shuffle=True,
+                                 validation_data=val_gen,
+                                 validation_steps=val_batches)
+        self.save_history(self.model_tag)
 
     def load_last_state(self):
         folder = "model_weights/{0}_{1}/*.hdf5".format(
@@ -141,8 +150,7 @@ class TrainingHandler:
 
     def load_best_weight(self, tag):
         best_row, min_cost, iter = self.checkpoint.get_best_state()
-        file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(
-            self.model_name, iter, cost, tag)
+        file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(self.model_name, iter, cost, tag)
         self.model.load_weights(file_name)
 
     def pretty_time(self, seconds):
@@ -153,3 +161,10 @@ class TrainingHandler:
 
     def clear_old_states(self):
         self.clear_old_states()
+    
+    def save_history(self, tag):
+        rows = self.checkpoint.get_states()
+        filename = "model_weights/{0}_{1}/history.txt".format(self.model_name, tag)
+        with open(filename, 'a') as file:
+            file.writelines([row[1] for row in rows])
+

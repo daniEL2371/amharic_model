@@ -58,15 +58,14 @@ def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
         CELL = LSTM
     else:
         CELL = GRU
-    class_model = Sequential()
-    class_model.add(CELL(256, input_shape=input_shape, return_sequences=True))
-    class_model.add(Dropout(.5))
-    class_model.add(CELL(256, return_sequences=False))
-    class_model.add(Dense(output_shape, activation="softmax"))
+    model = Sequential()
+    model.add(CELL(256, input_shape=input_shape, return_sequences=True))
+    model.add(CELL(256, return_sequences=False))
+    model.add(Dense(output_shape, activation="softmax"))
     adam = keras.optimizers.Adam(
         lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
-    class_model.compile(loss="categorical_crossentropy", optimizer=adam)
-    return class_model
+    model.compile(loss="categorical_crossentropy", optimizer=adam, metrics=['acc'])
+    return model
 
 
 def load_model(model_name, model_tag):
