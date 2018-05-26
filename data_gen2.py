@@ -20,15 +20,15 @@ class DataGen2:
         self.load_charset()
 
     def load_charset(self):
-        data = open(self.charset_file, encoding='utf-8').readlines()
+        charset = open(self.charset_file, encoding='utf-8').readlines()
         char2int = {}
         int2char = {}
         char2tup = {}
         tup2char = {}
-        data[-2] = data[-2] + '\n'
+        charset[-2] = charset[-2] + '\n'
         j = 0
-        for k in range(len(data)):
-            row = data[k][:-1].split(',')
+        for k in range(len(charset)):
+            row = charset[k][:-1].split(',')
             for i in range(len(row)):
                 char2tup[row[i]] = (k, i)
                 int2char[j] = row[i]
@@ -41,7 +41,7 @@ class DataGen2:
         self.tup2char = tup2char
         self.char2int = char2int
         self.char2tup = char2tup
-        self.n_consonants = len(data)
+        self.n_consonants = len(charset)
         self.n_vowels = 10
 
     def encode_text_to_num(self, text):
