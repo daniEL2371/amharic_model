@@ -39,17 +39,21 @@ def multi_task(input_shape, output_shapes, lstm=False, decay=0.00002):
         CELL = GRU
     x = Input(shape=input_shape)
     z = CELL(256, return_sequences=True)(x)
+    z = Dropout(.5)(z)
+    z = CELL(256, return_sequences=True)(z)
+    z = Dropout(.5)(z)
     z = CELL(256)(z)
-    print(output_shapes)
+    z = Dropout(.5)(z)
     y_vowel = Dense(output_shapes[1],
                     activation="softmax", name="vowel_output")(z)
     y_cons = Dense(output_shapes[0],
                    activation="softmax", name="cons_output")(z)
     model = Model(inputs=x, output=[y_cons, y_vowel])
     adam = keras.optimizers.Adam(
-        lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
+        lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
     model.compile(loss="categorical_crossentropy",
                   optimizer=adam, metrics=['acc'])
+    model.summary()
     return model
 
 
@@ -60,11 +64,16 @@ def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
         CELL = GRU
     model = Sequential()
     model.add(CELL(256, input_shape=input_shape, return_sequences=True))
+    model.add(Dropout(.5))
+    model.add(CELL(256, return_sequences=True))
+    model.add(Dropout(.5))
     model.add(CELL(256, return_sequences=False))
+    model.add(Dropout(.5))
     model.add(Dense(output_shape, activation="softmax"))
     adam = keras.optimizers.Adam(
-        lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
+        lr=0.002, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=decay)
     model.compile(loss="categorical_crossentropy", optimizer=adam, metrics=['acc'])
+    model.summary()
     return model
 
 

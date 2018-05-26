@@ -14,9 +14,9 @@ train_batches = 100
 val_batches = 33
 
 charset = "data/charset.txt"
-train_corpus = "data/big.txt"
-val_corpus = "data/small.txt"
-tag_name = "2_256"
+train_corpus = "data/train.txt"
+val_corpus = "data/validate.txt"
+tag_name = "3_256"
 
 seq_length = 100
 save_on_every = 100
@@ -36,11 +36,11 @@ output_shapes = [d.n_consonants, d.n_vowels]
 
 model = multi_task(input_shape, output_shapes, lstm=True)
 
-model_name = "single_input_model"
-trainer = TrainingHandler(model, model_name)
-trainer.train(tag_name, gen, epoches, 
-              train_batches, save_on_every,
-              val_gen=val_gen, val_batches=val_batches, 
-              save_model=True)
+# model_name = "single_input_multi_task"
+# trainer = TrainingHandler(model, model_name)
+# trainer.train(tag_name, gen, epoches, 
+#               train_batches, save_on_every,
+#               val_gen=val_gen, val_batches=val_batches, 
+#               save_model=True)
 
 
