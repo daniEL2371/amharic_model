@@ -10,7 +10,7 @@ from models import *
 from training_handler import TrainingHandler
 
 batch_size = 100
-train_batches = 20000
+train_batches = 100
 
 charset = "data/charset.txt"
 train_corpus = "data/train.txt"
