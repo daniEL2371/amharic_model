@@ -1,0 +1,66 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <style>
+        body>div {
+            width: 400px;
+            height: 400px;
+            background-color: burlywood;
+            border: solid 1px chocolate;
+            margin: 30 auto;
+            text-align: center;
+            align-items: center;
+        }
+
+        body>div>button {
+            padding: 10px;
+            margin: 10px
+        }
+
+        body>div>h1 {
+            font-size: 20px;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            height: 30px;
+            border: solid 1px chocolate;
+        }
+    </style>
+</head>
+
+<body>
+    <div>
+        <h1 id="word">ልዮ ነው</h1>
+        <button onclick="finish()">Finish</button><button onclick="skip()">No Skip</button><button onclick="save()">Yes Save</button>
+    </div>
+    <p id="result"></p>
+    <script>
+        var words = ["ለዮ ነው"];
+        var chosenWords = [];
+        var currentIndex = 0;
+        var textBox = document.getElementById('word');
+        var current = words[currentIndex];
+        textBox.innerText = current;
+
+        function skip() {
+            current = words[currentIndex];
+            currentIndex += 1;
+            textBox.innerText = current;
+        }
+
+        function save() {
+
+        }
+
+        function finish(){
+            var p = document.getElementById('result');
+            p.innerText = chosenWords.join(' ');
+        }
+
+    </script>
+</body>
+
+</html>

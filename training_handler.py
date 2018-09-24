@@ -54,7 +54,7 @@ class TrainingLogger(keras.callbacks.Callback):
             val = logs[key]
             info = "{0}:{1},".format(key, val)
             s += info
-        
+
         self.checkpoint.save(s)
         return
 
@@ -126,7 +126,8 @@ class TrainingHandler:
         folder = "model_weights/{0}_{1}/".format(
             self.model_name, self.model_tag)
         checkpoint_file = folder + "model_weight-{epoch:02d}-{loss:.4f}.hdf5"
-        checkpoint = ModelCheckpoint(checkpoint_file, monitor='loss', verbose=0)
+        checkpoint = ModelCheckpoint(
+            checkpoint_file, monitor='loss', verbose=0)
         self.model.fit_generator(generator, steps_per_epoch=per_epoch,
                                  verbose=0, epochs=epoches,
                                  initial_epoch=init_epoch,
@@ -150,7 +151,8 @@ class TrainingHandler:
 
     def load_best_weight(self, tag):
         best_row, min_cost, iter = self.checkpoint.get_best_state()
-        file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(self.model_name, iter, cost, tag)
+        file_name = "model_weights/{0}-{3}/{0}-{1}-{2:.5}.h5".format(
+            self.model_name, iter, cost, tag)
         self.model.load_weights(file_name)
 
     def pretty_time(self, seconds):
@@ -161,10 +163,10 @@ class TrainingHandler:
 
     def clear_old_states(self):
         self.clear_old_states()
-    
+
     def save_history(self, tag):
         rows = self.checkpoint.get_states()
-        filename = "model_weights/{0}_{1}/history.txt".format(self.model_name, tag)
+        filename = "model_weights/{0}_{1}/history.txt".format(
+            self.model_name, tag)
         with open(filename, 'a') as file:
             file.writelines([row[1] for row in rows])
-

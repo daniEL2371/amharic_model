@@ -16,9 +16,9 @@ val_batches = 33
 charset = "data/charset.txt"
 train_corpus = "data/train.txt"
 val_corpus = "data/validate.txt"
-tag_name = "3_256"
+tag_name = "3_256_LSTM"
 
-seq_length = 100
+seq_length = 128
 save_on_every = 100
 epoches = 50
 

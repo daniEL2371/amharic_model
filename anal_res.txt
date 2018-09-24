@@ -1,0 +1,198 @@
+?word: -ፍርደኞቹ
+
+word: ለጠቅላይ
+POS: agentive noun, root: <Tqll>, citation: ጠቀለለ
+ preposition: le
+
+word: ፍርድ
+POS: noun, stem: ፍርድ
+
+word: ቤት
+POS: noun, stem: ቤት
+
+word: ባቀረቡት
+POS: verb, root: <qrb>, citation: አቀረበ
+ subject: 3, plur
+ object: 3, sing, masc
+ grammar: perfective, transitive, relative, definite
+ preposition: be
+POS: verb, root: <qrb>, citation: አቀረበ
+ subject: 3, plur
+ grammar: perfective, transitive, relative, definite
+ preposition: be
+
+word: የይግባኝ
+POS: noun, stem: ይግባኝ
+ grammar: genitive
+
+word: አቤቱታ
+POS: noun, stem: አቤቱታ
+
+word: የቅሬታ
+POS: noun, stem: ቅሬታ
+ grammar: genitive
+
+word: ነጥቦቻቸውን
+POS: noun, stem: ነጥብ
+ possessor: 3, plur
+ grammar: plural, definite, accusative
+
+word: አስረድተዋል
+POS: verb, root: <rd'>, citation: አስረዳ
+ subject: 3, plur
+ grammar: gerundive, aux:alle, causative
+
+?word: ፡፡
+
+?word: ጋዜጠኛ
+
+word: ተመስገን
+POS: verb, root: <msgn>, citation: ተመሰገነ
+ subject: 2, sing, masc
+ grammar: jussive/imperative, passive
+POS: verb, root: <ms_g>, citation: ተመሰገ
+ subject: 1, plur
+ grammar: gerundive, passive
+
+?word: ቀጥተኛ
+
+word: ምስክርና
+POS: noun, stem: ምስክር
+ conjunctive suffix: na
+
+word: በሰነድ
+POS: noun, stem: ሰነድ
+ preposition: be
+
+word: የተጠናከረ
+POS: verb, root: <Tnkr>, citation: ተጠናከረ
+ subject: 3, sing, masc
+ grammar: perfective, reciprocal, passive, relative
+
+word: ማስረጃ
+POS: instrumental noun, root: <rd'>, citation: አስረዳ
+ grammar: causative
+POS: noun, stem: ማስረጃ
+POS: instrumental noun, root: <rj*>, citation: አስረጀ
+ grammar: causative
+
+word: ለሥር
+POS: noun, stem: ስር
+ preposition: le
+POS: noun, stem: እስር
+ preposition: le
+
+word: ፍርድ
+POS: noun, stem: ፍርድ
+
+word: ቤት
+POS: noun, stem: ቤት
+
+word: ያቀረበ
+POS: verb, root: <qrb>, citation: አቀረበ
+ subject: 3, sing, masc
+ grammar: perfective, transitive, relative
+
+word: ቢሆንም
+POS: verb, root: <hwn>, citation: ሆነ
+ subject: 3, sing, masc
+ grammar: imperfective
+ conjunctive prefix: bI conjunctive suffix: m
+
+word: የሥር
+POS: noun, stem: ስር
+ grammar: genitive
+POS: noun, stem: እስር
+ grammar: genitive
+
+word: ፍርድ
+POS: noun, stem: ፍርድ
+
+word: ቤት
+POS: noun, stem: ቤት
+
+word: ዓቃቤ
+?POS: noun, stem: አቃብ
+ possessor: 1, sing
+ grammar: definite
+
+word: ሕግ
+
+word: ወንጀል
+POS: noun, stem: ወንጀል
+
+word: ተፈጽሞባቸዋል
+POS: verb, root: <fS_m>, citation: ተፈጸመ
+ subject: 3, sing, masc
+ object: 3, plur, prep: -b-
+ grammar: gerundive, aux:alle, passive
+
+word: በሚል
+POS: verb, root: <b'l>, citation: አለ
+ subject: 3, sing, masc
+ grammar: imperfective, relative
+ preposition: be
+
+word: ያቀረባቸውን
+POS: verb, root: <qrb>, citation: አቀረበ
+ subject: 3, sing, masc
+ object: 3, plur
+ grammar: perfective, transitive, relative, accusative, definite
+POS: verb, root: <qr*>, citation: አቀረ
+ subject: 3, sing, masc
+ object: 3, plur, prep: -b-
+ grammar: perfective, transitive, relative, accusative, definite
+
+word: ከላይ
+POS: noun, stem: ላይ
+ preposition: ke
+POS: agentive noun, root: <kl_l>, citation: ከለለ
+POS: agentive noun, root: <l'l'>, citation: ላላ
+ preposition: ke
+POS: noun, stem: ከላይ
+POS: verb, root: <kl_l>, citation: ከላለለ
+ subject: 2, sing, fem
+ grammar: jussive/imperative, iterative
+
+word: የተጠቀሱትን
+POS: verb, root: <Tqs>, citation: ተጠቀሰ
+ subject: 3, plur
+ grammar: perfective, passive, relative, accusative, definite
+POS: verb, root: <Tqs>, citation: ተጠቀሰ
+ subject: 3, plur
+ object: 3, sing, masc
+ grammar: perfective, passive, relative, accusative, definite
+
+word: ዕትሞች
+POS: noun, stem: እትም
+ grammar: plural
+
+word: መሠረት
+
+word: በማድረግ
+POS: infinitive, root: <drg>, citation: አደረገ
+ grammar: transitive
+ preposition: be
+
+word: ብቻ
+POS: noun, stem: ብቻ
+
+word: ቅጣት
+POS: noun, stem: ቅጣት
+POS: verb, root: <qT'>, citation: ቀጣ
+ subject: 2, sing, masc
+ object: 3, sing, fem
+ grammar: jussive/imperative
+
+word: እንደወሰንበት
+POS: verb, root: <ws_n>, citation: ወሰነ
+ subject: 1, plur
+ object: 3, sing, masc, prep: -b-
+ grammar: perfective, relative, definite
+ preposition: Inde
+
+word: አስረድቷል
+POS: verb, root: <rd'>, citation: አስረዳ
+ subject: 3, sing, masc
+ grammar: gerundive, aux:alle, causative
+

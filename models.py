@@ -17,11 +17,11 @@ def save_model(model, name, tag):
     cwd = os.getcwd()
     full_name = "{0}/models/{1}-{2}.json".format(cwd, name, tag)
     model_json = model.to_json()
-    with open(full_name, "w") as json_file:
+    with open(full_name, "w") as json_  file:
         json_file.write(model_json)
 
 
-def load_model(model_name):
+def load_model(model_name): 
     with open(model_name, 'r') as json_file:
         loaded_model_json = json_file.read()
         loaded_model = model_from_json(loaded_model_json)
@@ -32,18 +32,18 @@ def initializer(shape):
     return tf.random_uniform(shape, minval=-0.08, maxval=0.08)
 
 
-def multi_task(input_shape, output_shapes, lstm=False, decay=0.00002):
+def multi_task(input_shape, output_shapes, lstm=False, decay=0.0002):
     if lstm:
         CELL = LSTM
     else:
         CELL = GRU
     x = Input(shape=input_shape)
     z = CELL(256, return_sequences=True)(x)
-    z = Dropout(.5)(z)
-    z = CELL(256, return_sequences=True)(z)
-    z = Dropout(.5)(z)
-    z = CELL(256)(z)
-    z = Dropout(.5)(z)
+    z = Dropout(0.2)(z)
+    z = CELL(256, return_sequences=False)(z)
+    z = Dropout(0.2)(z)
+    # z = CELL(256, return_sequences=False)(z)
+    # z = Dropout(0.5)(z)
     y_vowel = Dense(output_shapes[1],
                     activation="softmax", name="vowel_output")(z)
     y_cons = Dense(output_shapes[0],
@@ -57,7 +57,7 @@ def multi_task(input_shape, output_shapes, lstm=False, decay=0.00002):
     return model
 
 
-def get_model(input_shape, output_shape, lstm_cell=True, decay=0.00002):
+def get_model(input_shape, output_shape, lstm_cell=True, decay=0.0002):
     if lstm_cell:
         CELL = LSTM
     else:
