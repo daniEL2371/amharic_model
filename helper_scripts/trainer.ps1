@@ -1,5 +1,5 @@
 cd "c:\amharic_model\"
 gpu;
-python "C:\amharic_model\train_whole_char.py"
+python "C:\amharic_model\multi_input_multi_task.py"
 Read-Host -Prompt 'Close'
 

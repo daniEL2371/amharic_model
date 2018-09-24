@@ -49,7 +49,11 @@ class TrainingLogger(keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs={}):
         s = '{0}:{1}/{2},'.format("epoch", epoch, self.total_epoches)
         elapsed = time.time() - self.epoch_start_time
+        r_epoch = self.total_batches - epoch
+        remaining_time = r_epoch * elapsed
+        remaining_time = self.pretty_time(remaining_time)
         s += "{0}:{1},".format("elapsed", elapsed)
+        s += "{0}:{1},".format('remaining', remaining_time)
         for key in logs:
             val = logs[key]
             info = "{0}:{1},".format(key, val)
@@ -63,29 +67,29 @@ class TrainingLogger(keras.callbacks.Callback):
         return
 
     def on_batch_end(self, batch, logs={}):
-        time_taken = time.time() - self.start_time
-        batch_time = time.time() - self.batch_time_start
-        current_batch = logs.get('batch') + 1
-        if current_batch % self.save_on == 0:
-            total_iter = self.total_batches * self.total_epoches
-            till_now = (self.current_epoch - 1) * self.total_batches + batch
-            rem_iter = total_iter - till_now
-            remaining_time = rem_iter * batch_time
-            progress = (self.total_batches * (self.current_epoch - 1) +
-                        current_batch) * 100 / (self.total_batches * self.total_epoches)
-            cost = logs.get('loss')
-            time_taken = self.pretty_time(time_taken)
-            remaining_time = self.pretty_time(remaining_time)
-            progress = "Progress: {0:.3f}%, Epoch: {1}/{7}, Batch: {2}/{6}, Loss: {3:.5f}, Taken: {4}, Remaining: {5}\n".format(
-                progress, self.current_epoch, current_batch, cost, time_taken, remaining_time, self.total_batches, self.total_epoches)
-            print(progress)
+        # time_taken = time.time() - self.start_time
+        # batch_time = time.time() - self.batch_time_start
+        # current_batch = logs.get('batch') + 1
+        # if current_batch % self.save_on == 0:
+        #     total_iter = self.total_batches * self.total_epoches
+        #     till_now = (self.current_epoch - 1) * self.total_batches + batch
+        #     rem_iter = total_iter - till_now
+        #     remaining_time = rem_iter * batch_time
+        #     progress = (self.total_batches * (self.current_epoch - 1) +
+        #                 current_batch) * 100 / (self.total_batches * self.total_epoches)
+        #     cost = logs.get('loss')
+        #     time_taken = self.pretty_time(time_taken)
+        #     remaining_time = self.pretty_time(remaining_time)
+        #     progress = "Progress: {0:.3f}%, Epoch: {1}/{7}, Batch: {2}/{6}, Loss: {3:.5f}, Taken: {4}, Remaining: {5}\n".format(
+        #         progress, self.current_epoch, current_batch, cost, time_taken, remaining_time, self.total_batches, self.total_epoches)
+        #     print(progress)
         return
 
     def pretty_time(self, seconds):
         mins, secs = divmod(seconds, 60)
         hrs, mins = divmod(mins, 60)
         days, hrs = divmod(hrs, 24)
-        return "{0}d, {1}h, {2}m, {3:.2f}s".format(days, hrs, mins, secs)
+        return "{0}-{1}-{2}-{3}".format(int(days), int(hrs), int(mins), int(secs))
 
 
 class TrainingHandler:
